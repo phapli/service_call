@@ -223,13 +223,13 @@ class RF_Controller:
 			logger.info("CMD UPDATE")
 			room_id = data[1]
 			room = room_map[room_id-1]
-			print room.id
 			if room:
 				room.temp = data[2]
 				room.humit = data[3]
 				room.battery = data[4]
 				lcd.update_info(room)
 				return 0
+			self.write_ack(self.CMD_UPDATE,room_id)
 		elif data[0] == self.CMD_NEW:
 			return 0
 		elif data[0] == self.CMD_PROCESS:
