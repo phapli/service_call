@@ -17,12 +17,6 @@ from logging.handlers import RotatingFileHandler
 
 logger = logging.getLogger(__name__)
 def initialize_logger(output_dir):
-	"""Init logger for this python script
-
-	Args:
-	 output_dir (str): folder for write log fife.
-	 Returns:
-	"""
 	logger.setLevel(logging.INFO)
 	# create console handler and set level to INFO
 	handler = logging.StreamHandler()
@@ -58,6 +52,10 @@ RF_PORT = "/dev/ttyUSB0"
 RF_BAUDRATE = 9600
 
 breakevent = threading.Event()
+
+STATUS_DONE = 0
+STATUS_NEW = 1
+STATUS_PROCESS = 2
 
 trangthai = 0
 ping_status = 0
@@ -145,18 +143,10 @@ class RF_Controller:
 	CMD_UPDATE = 0x01
 	CMD_NEW = 0x02
 	CMD_PROCESS = 0x03
-	CMD_DONE = 0x03
-	CMD_ACK = 0x04
+	CMD_DONE = 0x04
+	CMD_ACK = 0x05
 
 	def __init__(self, port, baudrate, timeout):
-		""" Constructor for RF_Controller
-
-		Args:
-	 	port (int): rf port
-			baudrate (int): rf baudrate
-			timeout (int): rf timeout
-		Returns:
-		"""
 		self.ser.port = port
 		self.ser.baudrate = baudrate
 		self.ser.timeout = timeout
@@ -168,14 +158,6 @@ class RF_Controller:
 
 
 	def read(self):
-		""" Read RF data
-
-		Args:
-	 	port (int): rf port
-			baudrate (int): rf baudrate
-			timeout (int): rf timeout
-		Returns:
-		"""
 		temp_buff_read = self.ser.read(5)
 		self.ser.flushInput()
 		if len(temp_buff_read) < 5:
@@ -186,33 +168,14 @@ class RF_Controller:
 		self.process_data(self.buff_read)
 
 	def write(self, data):
-		""" Write RF data
-
-		Args:
-			data (bytes): data
-		Returns:
-		"""	
 		logger.info("send " + binascii.hexlify(data))
 		self.ser.write(data)
 
 	def write_process(self, room):
-		""" Write CMD_PROCESS to 1 special room.
-
-		Args:
-			room (byte): room target
-		Returns:
-		"""	
 		data = bytearray([self.CMD_PROCESS, room, 0x00, 0x00, 0x00])
 		self.write(data)
 
 	def write_ack(self, cmd, room):
-		""" Write CMD_ACK.
-
-		Args:
-			cmd (byte): cmd received
-			room (byte): room target
-		Returns:
-		"""	
 		data = bytearray([self.CMD_ACK, cmd, room, 0x00, 0x00])
 		self.write(data)
 
@@ -231,6 +194,14 @@ class RF_Controller:
 				self.write_ack(self.CMD_UPDATE,room_id)
 			return 0
 		elif data[0] == self.CMD_NEW:
+			logger.info("CMD NEW")
+			room_id = data[1]
+			room = room_map[room_id-1]
+			if room:
+				if room.status == STATUS_DONE:
+					room.status = STATUS_NEW
+					lcd.change_status(room)
+				self.write_ack(self.CMD_UPDATE,room_id)
 			return 0
 		elif data[0] == self.CMD_PROCESS:
 			return 0
@@ -247,8 +218,6 @@ class LCD_Controller:
 	FIELD_BATTERY = 2
 
 	def __init__(self):
-		""" Constructor for LCD_Controller
-		"""
 		Serial.begin(9600)
 		self.refesh()
 
@@ -271,6 +240,39 @@ class LCD_Controller:
 		self.update_data(self.FIELD_HUMIT, room.id - 1, room.humit)
 		self.update_data(self.FIELD_BATTERY, room.id - 1, room.battery)
 
+	def change_status(self, room):
+		if room.status == STATUS_DONE:
+			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ", 0"
+			Serial.printstr(senddata)
+			self.end_cmd()
+			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ", 0"
+			Serial.printstr(senddata)
+			self.end_cmd()
+			senddata =  "vis n" + str(room.id - 1) + ", 1"
+			Serial.printstr(senddata)
+			self.end_cmd()
+		elif room.status == STATUS_NEW:
+			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ", 1"
+			Serial.printstr(senddata)
+			self.end_cmd()
+			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ", 0"
+			Serial.printstr(senddata)
+			self.end_cmd()
+			senddata =  "vis n" + str(room.id - 1) + ", 1"
+			Serial.printstr(senddata)
+			self.end_cmd()
+		elif room.status == STATUS_PROCESS:
+			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ", 0"
+			Serial.printstr(senddata)
+			self.end_cmd()
+			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ", 1"
+			Serial.printstr(senddata)
+			self.end_cmd()
+			senddata =  "vis n" + str(room.id - 1) + ", 1"
+			Serial.printstr(senddata)
+			self.end_cmd()
+
+
 	def end_cmd(self):
 		Serial.write(0xFF)
 		Serial.write(0xFF)
@@ -280,6 +282,7 @@ def init_system():
 	global room_map, lcd
 	room_map = [Room(1), Room(2), Room(3), Room(4), Room(5), Room(6)]
 	lcd = LCD_Controller()
+	lcd.refesh()
 	er = AlarmSystem(breakevent)
 	handler = SignalHandler(breakevent,er)
 	signal.signal(signal.SIGINT, handler)
