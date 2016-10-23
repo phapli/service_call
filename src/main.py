@@ -228,8 +228,8 @@ class RF_Controller:
 				room.humit = data[3]
 				room.battery = data[4]
 				lcd.update_info(room)
-				return 0
-			self.write_ack(self.CMD_UPDATE,room_id)
+				self.write_ack(self.CMD_UPDATE,room_id)
+			return 0
 		elif data[0] == self.CMD_NEW:
 			return 0
 		elif data[0] == self.CMD_PROCESS:
