@@ -20,34 +20,30 @@ def initialize_logger(output_dir):
 	"""Init logger for this python script
 
 	Args:
-        output_dir (str): folder for write log fife.
-
-    Returns:
+	 output_dir (str): folder for write log fife.
+	 Returns:
 	"""
-    logger.setLevel(logging.INFO)
-     
-    # create console handler and set level to INFO
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.INFO)
-    logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-    handler.setFormatter(logFormatter)
-    logger.addHandler(handler)
- 
-    # create error file handler and set level to error
-    handler = RotatingFileHandler(os.path.join(output_dir, "error.log"),"a", maxBytes=100*1024*1024, 
-                                 backupCount=2, encoding=None, delay=0)
-    handler.setLevel(logging.ERROR)
-    logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-    handler.setFormatter(logFormatter)
-    logger.addHandler(handler)
- 
-    # create INFO file handler and set level to info
-    handler = RotatingFileHandler(os.path.join(output_dir, "application.log"),"a", maxBytes=100*1024*1024, 
-                                 backupCount=2, encoding=None, delay=0)
-    handler.setLevel(logging.INFO)
-    logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-    handler.setFormatter(logFormatter)
-    logger.addHandler(handler)
+	# logger.setLevel(logging.INFO)
+	# create console handler and set level to INFO
+	handler = logging.StreamHandler()
+	handler.setLevel(logging.INFO)
+	logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+	handler.setFormatter(logFormatter)
+	logger.addHandler(handler)
+	  # create error file handler and set level to error
+	handler = RotatingFileHandler(os.path.join(output_dir, "error.log"),"a", maxBytes=100*1024*1024, 
+	  backupCount=2, encoding=None, delay=0)
+	handler.setLevel(logging.ERROR)
+	logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+	handler.setFormatter(logFormatter)
+	logger.addHandler(handler)
+	  # create INFO file handler and set level to info
+	handler = RotatingFileHandler(os.path.join(output_dir, "application.log"),"a", maxBytes=100*1024*1024, 
+	  backupCount=2, encoding=None, delay=0)
+	handler.setLevel(logging.INFO)
+	logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+	handler.setFormatter(logFormatter)
+	logger.addHandler(handler)
 
 initialize_logger("/var/log/service_call")
 
@@ -101,7 +97,7 @@ class AlarmSystem(threading.Thread):
 		self.stopper = stopper
 	def run(self):	
 		global trangthai, bell, last_update, ping_status
-		while not self.stopper.is_set():
+		# while not self.stopper.is_set():
 			# if ping_status == 1:
 			# 	GPIO.output(23, 1)
 			# 	GPIO.output(25, 1)
@@ -111,22 +107,18 @@ class AlarmSystem(threading.Thread):
 			# 		GPIO.output(25, 0)
 			# 		GPIO.output(12, 1)
 			# 		if(bell == 1):
-						
-			# 			time.sleep(0.25)
+	# 			time.sleep(0.25)
 			# 		else:
-						
-			# 		GPIO.output(25, 1)
+	# 		GPIO.output(25, 1)
 			# 		GPIO.output(12, 0)
 			# 		time.sleep(0.25)
 			# 		GPIO.output(25, 0)
 			# 		GPIO.output(12, 1)
-					
 			# 		time.sleep(0.25)
 			# 		GPIO.output(25, 1)
 			# 		GPIO.output(12, 0)
 			# 		time.sleep(0.25)
 			# 	else:
-					
 			# 		GPIO.output(25, 1)
 			# 		GPIO.output(12, 0)
 			# 		GPIO.output(23, 0)
@@ -142,12 +134,11 @@ class Room:
 	temp = -1
 	humit = -1
 	battery = -1
-  
 	def __init__(self, room_id):
 		self.id = room_id
 	
 ###############################################################################
-class RF_Controller():
+class RF_Controller:
 	ser = serial.Serial()
 	buff_read = bytearray([0x00, 0x00, 0x00, 0x00, 0x00])
 
@@ -161,11 +152,10 @@ class RF_Controller():
 		""" Constructor for RF_Controller
 
 		Args:
-        	port (int): rf port
+	 	port (int): rf port
 			baudrate (int): rf baudrate
 			timeout (int): rf timeout
-    	Returns:
-		
+		Returns:
 		"""
 		self.ser.port = port
 		self.ser.baudrate = baudrate
@@ -181,11 +171,10 @@ class RF_Controller():
 		""" Read RF data
 
 		Args:
-        	port (int): rf port
+	 	port (int): rf port
 			baudrate (int): rf baudrate
 			timeout (int): rf timeout
-    	Returns:
-		
+		Returns:
 		"""
 		temp_buff_read = self.ser.read(5)
 		self.ser.flushInput()
@@ -201,8 +190,7 @@ class RF_Controller():
 
 		Args:
 			data (bytes): data
-    	Returns:
-		
+		Returns:
 		"""	
 		logger.info("send " + binascii.hexlify(data))
 		self.ser.write(data)
@@ -212,8 +200,7 @@ class RF_Controller():
 
 		Args:
 			room (byte): room target
-    	Returns:
-		
+		Returns:
 		"""	
 		data = bytearray([self.CMD_PROCESS, room, 0x00, 0x00, 0x00])
 		self.write(data)
@@ -224,8 +211,7 @@ class RF_Controller():
 		Args:
 			cmd (byte): cmd received
 			room (byte): room target
-    	Returns:
-		
+		Returns:
 		"""	
 		data = bytearray([self.CMD_ACK, cmd, room, 0x00, 0x00])
 		self.write(data)
@@ -241,7 +227,7 @@ class RF_Controller():
 				room.humit = data[3]
 				room.battery = data[4]
 				lcd.update_info(room)
-			return 0
+				return 0
 		elif data[0] == self.CMD_NEW:
 			return 0
 		elif data[0] == self.CMD_PROCESS:
@@ -252,7 +238,7 @@ class RF_Controller():
 			return 0
 
 ###############################################################################
-class LCD_Controller
+class LCD_Controller:
 
 	FIELD_TEMP = 0
 	FIELD_HUMIT = 1
@@ -319,7 +305,7 @@ def main():
 	# 		while not self.stopper.is_set():
 	# 			thoigian = strftime("%T",localtime())
 	# 			senddata = "t9.txt=\"" + thoigian + "\""
-    # 				Serial.printstr(senddata)
+	# 				Serial.printstr(senddata)
 	# 			end_cmd()
 	# 			now = time.time()
 	# 			if (now - last_update) > 30:
