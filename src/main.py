@@ -23,7 +23,7 @@ def initialize_logger(output_dir):
 	 output_dir (str): folder for write log fife.
 	 Returns:
 	"""
-	# logger.setLevel(logging.INFO)
+	logger.setLevel(logging.INFO)
 	# create console handler and set level to INFO
 	handler = logging.StreamHandler()
 	handler.setLevel(logging.INFO)
@@ -183,7 +183,7 @@ class RF_Controller:
 		logger.info("receive: " + binascii.hexlify(temp_buff_read))
 		for index in range(len(temp_buff_read)):
 			self.buff_read[index] = temp_buff_read[index]
-		self.process_data(temp_buff_read)
+		self.process_data(self.buff_read)
 
 	def write(self, data):
 		""" Write RF data
@@ -220,8 +220,10 @@ class RF_Controller:
 		global lcd
 		logger.info("process data")
 		if data[0] == self.CMD_UPDATE:
+			logger.info("CMD UPDATE")
 			room_id = data[1]
-			room = room_map[room_id]
+			room = room_map[room_id-1]
+			print room.id
 			if room:
 				room.temp = data[2]
 				room.humit = data[3]
@@ -255,19 +257,19 @@ class LCD_Controller:
 		Serial.printstr(senddata)
 		self.end_cmd()
 
-	def update_data(self, index, field, data):
-		logger.info("update info room: " + (index + 1) + " field: " + field + " data: " + data)
+	def update_data(self, field, index, data):
+		logger.info("update info room: " + str(index + 1) + " field: " + str(field) + " data: " + str(data))
 		if data > 0:
-			senddata =  "t" + index*3 + field + ".txt=\"" + data + "\""
+			senddata =  "t" + str(index*3 + field) + ".txt=\"" + str(data) + "\""
 		else:
-			senddata =  "t" + index*3 + field + ".txt=\"-\""
+			senddata =  "t" + str(index*3 + field) + ".txt=\"-\""
 		Serial.printstr(senddata)
 		self.end_cmd()
 
 	def update_info(self, room):
-		self.update_data(FIELD_TEMP, room.id - 1, room.temp)
-		self.update_data(FIELD_HUMIT, room.id - 1, room.humit)
-		self.update_data(FIELD_BATTERY, room.id - 1, room.battery)
+		self.update_data(self.FIELD_TEMP, room.id - 1, room.temp)
+		self.update_data(self.FIELD_HUMIT, room.id - 1, room.humit)
+		self.update_data(self.FIELD_BATTERY, room.id - 1, room.battery)
 
 	def end_cmd(self):
 		Serial.write(0xFF)
@@ -275,6 +277,7 @@ class LCD_Controller:
 		Serial.write(0xFF)	
 
 def init_system():
+	global room_map, lcd
 	room_map = [Room(1), Room(2), Room(3), Room(4), Room(5), Room(6)]
 	lcd = LCD_Controller()
 	er = AlarmSystem(breakevent)
@@ -338,11 +341,11 @@ def main():
 	last_update = time.time()
 	trangthai = 0
 	while 1:
-		try:
-			check_data = rf_controller.read()
-		except:
-			logger.error("cannot read from rf")
-			check_data = 0
+		#try:
+		check_data = rf_controller.read()
+		#except:
+			#logger.error("cannot read from rf")
+			#check_data = 0
 		# if(check_data == 1):
 		# 	send_txt("temperature", rf_controller.data_temp)
 		# if(check_data == 2):
