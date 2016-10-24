@@ -246,29 +246,36 @@ class LCD_Controller:
 		logger.info(room.status)
 		if room.status == STATUS_DONE:
 			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
+			logger.info(senddata)
 			Serial.printstr(senddata)
 			self.end_cmd()
-			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
+			senddata =  "vis t" + str(18 + (room.id - 1)*2 + 1) + ",0"
+			logger.info(senddata)
 			Serial.printstr(senddata)
 			self.end_cmd()
 			senddata =  "vis n" + str(room.id - 1) + ",1"
+			logger.info(senddata)
 			Serial.printstr(senddata)
 			self.end_cmd()
 		elif room.status == STATUS_NEW:
-			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",1"
+			print("NEW")
+			senddata =  "vis t" + str(18 + (room.id - 1)*2 + 1) + ",0"
 			Serial.printstr(senddata)
 			self.end_cmd()
-			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
+			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",1"
+			logger.info(senddata)
 			Serial.printstr(senddata)
 			self.end_cmd()
 			senddata =  "vis n" + str(room.id - 1) + ",1"
 			Serial.printstr(senddata)
 			self.end_cmd()
 		elif room.status == STATUS_PROCESS:
+			print("PROCESS")
 			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
+			logger.info(senddata)
 			Serial.printstr(senddata)
 			self.end_cmd()
-			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",1"
+			senddata =  "vis t" + str(18 + (room.id - 1)*2 + 1) + ",1"
 			Serial.printstr(senddata)
 			self.end_cmd()
 			senddata =  "vis n" + str(room.id - 1) + ",1"
