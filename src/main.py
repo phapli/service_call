@@ -86,6 +86,7 @@ class LCD_Process(threading.Thread):
 		self.lcd = lcd
 	def run(self):
 		while not self.stopper.is_set():
+			logger.info("LCD_Process")
 			lcd.read()
 ###############################################################################		
 class AlarmSystem(threading.Thread):
@@ -250,6 +251,7 @@ class LCD_Controller:
 	FIELD_HUMIT = 1
 	FIELD_BATTERY = 2
 
+	buff_read = bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
 	def __init__(self):
 		Serial.begin(9600)
 		self.refesh()
@@ -258,6 +260,18 @@ class LCD_Controller:
 		senddata = "page 1"
 		Serial.printstr(senddata)
 		self.end_cmd()
+
+	def read(self):
+
+		temp_buff_read = self.ser.read(7)
+		logger.info("receive: " + binascii.hexlify(temp_buff_read))
+		self.ser.flushInput()
+		if len(temp_buff_read) < 7:
+			return -1
+		logger.info("receive: " + binascii.hexlify(temp_buff_read))
+		for index in range(len(temp_buff_read)):
+			self.buff_read[index] = temp_buff_read[index]
+		# self.process_data(self.buff_read)
 
 	def update_data(self, field, index, data):
 		logger.info("update info room: " + str(index + 1) + " field: " + str(field) + " data: " + str(data))
@@ -324,10 +338,15 @@ def init_system():
 	room_map = [Room(1), Room(2), Room(3), Room(4), Room(5), Room(6)]
 	lcd = LCD_Controller()
 	lcd.refesh()
-	er = AlarmSystem(breakevent)
-	handler = SignalHandler(breakevent,er)
-	signal.signal(signal.SIGINT, handler)
-	er.start()
+	alarm_system = AlarmSystem(breakevent)
+	handler_alarm = SignalHandler(breakevent,alarm_system)
+	signal.signal(signal.SIGINT, handler_alarm)
+	alarm_system.start()
+
+	lcd_process = LCD_Process(breakevent)
+	handler_lcd = SignalHandler(breakevent,lcd_process)
+	signal.signal(signal.SIGINT, handler_lcd)
+	lcd_process.start()
 
 ###############################################################################
 
