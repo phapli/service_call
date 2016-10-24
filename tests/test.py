@@ -2,7 +2,7 @@ import fileinput
 import serial
 import binascii
 
-RF_PORT = "/dev/ttyUSB1"
+RF_PORT = "/dev/ttyUSB0"
 RF_BAUDRATE = 9600
 
 class RF_Controller:

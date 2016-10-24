@@ -95,6 +95,8 @@ class AlarmSystem(threading.Thread):
 		self.stopper = stopper
 	def run(self):	
 		global trangthai, bell, last_update, ping_status
+		logger.info("debug")
+		time.sleep(2)
 		# while not self.stopper.is_set():
 			# if ping_status == 1:
 			# 	GPIO.output(23, 1)
@@ -201,15 +203,44 @@ class RF_Controller:
 				logger.info(room.status)
 				if room.status == STATUS_DONE:
 					room.status = STATUS_NEW
+					room.temp = data[2]
+					room.humit = data[3]
+					room.battery = data[4]
+					lcd.update_info(room)
 					logger.info("change status")
 					lcd.change_status(room)
 				self.write_ack(self.CMD_UPDATE,room_id)
 			return 0
 		elif data[0] == self.CMD_PROCESS:
+			logger.info("CMD PROCESS")
 			return 0
 		elif data[0] == self.CMD_DONE:
+			logger.info("CMD DONE")
+			room_id = data[1]
+			room = room_map[room_id-1]
+			if room:
+				logger.info(room.status)
+				if room.status == STATUS_PROCESS:
+					room.status = STATUS_DONE
+					room.temp = data[2]
+					room.humit = data[3]
+					room.battery = data[4]
+					lcd.update_info(room)
+					logger.info("change status")
+					lcd.change_status(room)
+				self.write_ack(self.CMD_UPDATE,room_id)
 			return 0
 		elif data[0] == self.CMD_ACK:
+			logger.info("CMD ACK")
+			if data[1] == self.CMD_PROCESS:
+				room_id = data[2]
+				room = room_map[room_id-1]
+				if room:
+					logger.info(room.status)
+					if room.status == STATUS_NEW:
+						room.status = CMD_PROCESS
+						logger.info("change status")
+						lcd.change_status(room)
 			return 0
 
 ###############################################################################
@@ -289,7 +320,7 @@ class LCD_Controller:
 		Serial.write(0xFF)	
 
 def init_system():
-	global room_map, lcd
+	global room_map, lcd, breakevent
 	room_map = [Room(1), Room(2), Room(3), Room(4), Room(5), Room(6)]
 	lcd = LCD_Controller()
 	lcd.refesh()
