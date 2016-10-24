@@ -263,14 +263,14 @@ class LCD_Controller:
 
 	def read(self):
 
-		temp_buff_read = self.ser.read(7)
-		logger.info("receive: " + binascii.hexlify(temp_buff_read))
-		self.ser.flushInput()
-		if len(temp_buff_read) < 7:
-			return -1
-		logger.info("receive: " + binascii.hexlify(temp_buff_read))
-		for index in range(len(temp_buff_read)):
-			self.buff_read[index] = temp_buff_read[index]
+		temp_buff_read = Serial.readString()
+		logger.info("receive: " + temp_buff_read)
+		#Serial.flushInput()
+		#if len(temp_buff_read) < 7:
+		#	return -1
+		#logger.info("receive: " + binascii.hexlify(temp_buff_read))
+		#for index in range(len(temp_buff_read)):
+		#	self.buff_read[index] = temp_buff_read[index]
 		# self.process_data(self.buff_read)
 
 	def update_data(self, field, index, data):
@@ -343,7 +343,7 @@ def init_system():
 	signal.signal(signal.SIGINT, handler_alarm)
 	alarm_system.start()
 
-	lcd_process = LCD_Process(breakevent)
+	lcd_process = LCD_Process(breakevent, lcd)
 	handler_lcd = SignalHandler(breakevent,lcd_process)
 	signal.signal(signal.SIGINT, handler_lcd)
 	lcd_process.start()
