@@ -90,7 +90,6 @@ class LCD_Process(threading.Thread):
 		self.lcd = lcd
 	def run(self):
 		while not self.stopper.is_set():
-			logger.info("LCD_Process")
 			lcd.read()
 ###############################################################################		
 class AlarmSystem(threading.Thread):
