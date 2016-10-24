@@ -257,7 +257,7 @@ class RF_Controller:
 					room.last_send_time = time.time()
 					room.retry_count = 0
 					if room.status == STATUS_NEW:
-						room.status = CMD_PROCESS
+						room.status = STATUS_PROCESS
 						logger.info("change status")
 						lcd.change_status(room)
 			return 0
