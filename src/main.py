@@ -98,37 +98,39 @@ class AlarmSystem(threading.Thread):
 		super(AlarmSystem, self).__init__()
 		self.stopper = stopper
 	def run(self):	
-		global trangthai, bell, last_update, ping_status
-		logger.info("debug")
-		time.sleep(2)
-		# while not self.stopper.is_set():
-			# if ping_status == 1:
-			# 	GPIO.output(23, 1)
-			# 	GPIO.output(25, 1)
-			# else:
-			# 	if(trangthai == 1):
-			# 		GPIO.output(23, 1)
-			# 		GPIO.output(25, 0)
-			# 		GPIO.output(12, 1)
-			# 		if(bell == 1):
-	# 			time.sleep(0.25)
-			# 		else:
-	# 		GPIO.output(25, 1)
-			# 		GPIO.output(12, 0)
-			# 		time.sleep(0.25)
-			# 		GPIO.output(25, 0)
-			# 		GPIO.output(12, 1)
-			# 		time.sleep(0.25)
-			# 		GPIO.output(25, 1)
-			# 		GPIO.output(12, 0)
-			# 		time.sleep(0.25)
-			# 	else:
-			# 		GPIO.output(25, 1)
-			# 		GPIO.output(12, 0)
-			# 		GPIO.output(23, 0)
-			# 		time.sleep(2)
-			# 		GPIO.output(23, 1)
-			# 		time.sleep(2)
+		global room_map
+		while not self.stopper.is_set():
+			alarm_status = 0
+			for room in room_map:
+				if room.status == STATUS_NEW:
+					alarm_status = 2
+					break
+				elif room_status == STATUS_PROCESS:
+					alarm_status = 1
+			if alarm_status == 0:
+				#  green status
+				GPIO.output(25, 1)
+				GPIO.output(12, 0)
+				GPIO.output(23, 0)
+				time.sleep(2)
+				GPIO.output(23, 1)
+				time.sleep(2)
+			elif: alarm_status == 1:
+				# yellow status
+				GPIO.output(23, 1)
+				GPIO.output(12, 0)
+				GPIO.output(25, 0)
+				time.sleep(2)
+				GPIO.output(25, 1)
+				time.sleep(2)
+			elif: alarm_status == 2:
+				# red status
+				GPIO.output(23, 1)
+				GPIO.output(12, 1)
+				GPIO.output(25, 0)
+				time.sleep(2)
+				GPIO.output(25, 1)
+				time.sleep(2)
 
 ##############################################################################
 class Room:
@@ -138,6 +140,11 @@ class Room:
 	temp = -1
 	humit = -1
 	battery = -1
+	last_update = 0
+	pending_cmd = False
+	last_send_time = 0
+	retry_count = 0
+
 	def __init__(self, room_id):
 		self.id = room_id
 	
@@ -178,6 +185,8 @@ class RF_Controller:
 		self.ser.write(data)
 
 	def write_process(self, room):
+		room.pending_cmd = True
+		room.last_send_time = time.time()
 		data = bytearray([self.CMD_PROCESS, room, 0x00, 0x00, 0x00])
 		self.write(data)
 
@@ -196,6 +205,7 @@ class RF_Controller:
 				room.temp = data[2]
 				room.humit = data[3]
 				room.battery = data[4]
+				room.last_update = time.time()
 				lcd.update_info(room)
 				self.write_ack(self.CMD_UPDATE,room_id)
 			return 0
@@ -210,6 +220,7 @@ class RF_Controller:
 					room.temp = data[2]
 					room.humit = data[3]
 					room.battery = data[4]
+					room.last_update = time.time()
 					lcd.update_info(room)
 					logger.info("change status")
 					lcd.change_status(room)
@@ -229,6 +240,7 @@ class RF_Controller:
 					room.temp = data[2]
 					room.humit = data[3]
 					room.battery = data[4]
+					room.last_update = time.time()
 					lcd.update_info(room)
 					logger.info("change status")
 					lcd.change_status(room)
@@ -241,6 +253,9 @@ class RF_Controller:
 				room = room_map[room_id-1]
 				if room:
 					logger.info(room.status)
+					room.pending_cmd = False
+					room.last_send_time = time.time()
+					room.retry_count = 0
 					if room.status == STATUS_NEW:
 						room.status = CMD_PROCESS
 						logger.info("change status")
@@ -388,7 +403,7 @@ def init_system():
 def main():
 	"""Main function
 	"""
-	global rf_controller
+	global rf_controller, room_map, lcd
 	init_system()
 
 	logger.info("Service Call System Start ...")
@@ -396,93 +411,28 @@ def main():
 	logger.info("Opening rf")
 	rf_controller = RF_Controller(RF_PORT, RF_BAUDRATE, 0.2)
 	logger.info("Open rf OK")
-	# class Time(threading.Thread):
-	# 	stopper = None
-	# 	def __init__(self, stopper):
-	# 		super(Time, self).__init__()
-	# 		self.stopper = stopper
-	# 	def run(self):
-	# 		global trangthai, last_update, ping_status
-	# 		while not self.stopper.is_set():
-	# 			thoigian = strftime("%T",localtime())
-	# 			senddata = "t9.txt=\"" + thoigian + "\""
-	# 				Serial.printstr(senddata)
-	# 			end_cmd()
-	# 			now = time.time()
-	# 			if (now - last_update) > 30:
-	# 				if ping_status == 0:
-	# 					cmd_py = 'python /home/pi/working/alarm_python/alarm/send_email.py --codeit 03 --codevanhanh 0 --temp 0 --humid 0 --time ' + str(strftime("%T",localtime())) + ' &'
-	# 					logger.info(cmd_py)
-	# 					os.system(cmd_py)
-	# 				ping_status = 1
-	# 			if(trangthai ==1):
-	# 				senddata = "page page5"
-	# 				Serial.printstr(senddata)
-	# 				end_cmd()
-	# 				time.sleep(0.5)
-	# 				senddata = "page page0"
-	# 				Serial.printstr(senddata)
-	# 				end_cmd()
-	# 				time.sleep(0.5)
-	# 			else:
-	# 				time.sleep(1)
-
-	# t = Time(breakevent)
-	# handler = SignalHandler(breakevent,t)
-	# signal.signal(signal.SIGINT, handler)
-	# t.start()
-
-	status = 0
-	loivanhanh = 0
-	pre_loivanhanh = 0
-	pre_status = 0
-	last_update = time.time()
-	trangthai = 0
+	
 	while 1:
-		#try:
 		check_data = rf_controller.read()
-		#except:
-			#logger.error("cannot read from rf")
-			#check_data = 0
-		# if(check_data == 1):
-		# 	send_txt("temperature", rf_controller.data_temp)
-		# if(check_data == 2):
-		# 	send_txt("humid", rf_controller.data_humid)
-		# if(check_data == 3):
-		# 	if rf_controller.data_alarm ==2:
-		# 		status = 2
-		# 	elif rf_controller.data_alarm >=1:
-		# 		status = 1
-		# 	else:
-		# 		status = 0
-		# if(check_data == 4):
-		# 	if pre_loivanhanh != rf_controller.data_error: 
-		# 		loivanhanh = rf_controller.data_error
-		# 	pre_loivanhanh = rf_controller.data_error
-		# if((pre_status == 0) and (status ==1)):
-		# 	trangthai = 1
-		# 	bell = 1
-		# elif((pre_status == 1) and (status == 0)):
-		# 	trangthai = 0
-		# 	bell = 0
-		# if(check_data > 2):
-		# 	cmd_py = 'python /home/pi/working/alarm_python/alarm/send_email.py --codeit ' + str(pre_status) + str(status) + ' --codevanhanh ' + str(loivanhanh) + ' --temp ' + str(rf_controller.data_temp) + ' --humid ' + str(rf_controller.data_humid) + ' --time ' + str(strftime("%T",localtime())) + ' &'
-		# 	logger.info(cmd_py)
-		# 	os.system(cmd_py)
-		# 	pre_status = status
+		for room in room_map:
+			if time.time() - room.last_update >= 10:
+				room.temp = -1
+				room.humit = -1
+				room.battery = -1
+				room.last_update = time.time()
+				lcd.update_info(room)
+			if room.pending_cmd == True:
+				if room.retry_count >=2:
+					# cancel
+					room.retry_count = 0
+					room.pending_cmd = False
+				elif time.time() - room.last_send_time >= 1:
+					room.retry_count += 1
+					rf_controller.write_process(room.id)
+					room.last_send_time = time.time()
+					
 	Serial.end()
 ###############################################################################
 # Run
 ###############################################################################
-
-# GPIO.output(23, 0)
-# GPIO.output(25, 0)
-# GPIO.output(12, 1)
-# time.sleep(1)
-
-# GPIO.output(23, 1)
-# GPIO.output(25, 1)
-# GPIO.output(12, 0)
-
 if __name__ == '__main__': main()
-
