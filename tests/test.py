@@ -2,7 +2,7 @@ import fileinput
 import serial
 import binascii
 
-RF_PORT = "/dev/ttyUSB0"
+RF_PORT = "/dev/ttyUSB1"
 RF_BAUDRATE = 9600
 
 class RF_Controller:
@@ -16,26 +16,12 @@ class RF_Controller:
 	CMD_ACK = 0x04
 
 	def __init__(self, port, baudrate, timeout):
-		""" Constructor for RF_Controller
-	Args:
-	port (int): rf port
-	baudrate (int): rf baudrate
-	timeout (int): rf timeout
-		Returns:
-		"""
 		self.ser.port = port
 		self.ser.baudrate = baudrate
 		self.ser.timeout = timeout
 		self.ser.open()
 		print self.ser.is_open
 	def read(self):
-		""" Read RF data
-	Args:
-	port (int): rf port
-	baudrate (int): rf baudrate
-	timeout (int): rf timeout
-		Returns:
-		"""
 		temp_buff_read = self.ser.read(5)
 		self.ser.flushInput()
 		if len(temp_buff_read) < 5:
@@ -46,30 +32,14 @@ class RF_Controller:
 		self.process_data(temp_buff_read)
 
 	def write(self, data):
-		""" Write RF data
-		Args:
-			data (bytes): data
-		Returns:
-		"""	
 		print ("send " + binascii.hexlify(data))
 		self.ser.write(data)
 
-	def write_process(self, room):
-		""" Write CMD_PROCESS to 1 special room.
-		Args:
-			room (byte): room target
-		Returns:
-		"""	
+	def write_process(self, room):	
 		data = bytearray([self.CMD_PROCESS, room, 0x00, 0x00, 0x00])
 		self.write(data)
 
 	def write_ack(self, cmd, room):
-		""" Write CMD_ACK.
-	Args:
-	cmd (byte): cmd received
-	room (byte): room target
-		Returns:
-		"""	
 		data = bytearray([self.CMD_ACK, cmd, room, 0x00, 0x00])
 		self.write(data)
 
