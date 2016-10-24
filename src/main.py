@@ -278,9 +278,9 @@ class LCD_Controller:
 		self.end_cmd()
 
 	def write(self, cmd):
-		data = map(ord, cmd)
-		logger.info("send " + binascii.hexlify(data))
-		self.ser.write(data)
+		#data = map(ord, cmd)
+		#logger.info("send " + binascii.hexlify(data))
+		self.ser.write(cmd)
 
 
 	def read(self):
@@ -291,7 +291,7 @@ class LCD_Controller:
 		logger.info("receive: " + binascii.hexlify(temp_buff_read))
 		for index in range(len(temp_buff_read)):
 			self.buff_read[index] = temp_buff_read[index]
-		self.process_data(self.buff_read)
+		#self.process_data(self.buff_read)
 
 	def update_data(self, field, index, data):
 		logger.info("update info room: " + str(index + 1) + " field: " + str(field) + " data: " + str(data))
@@ -362,9 +362,7 @@ class LCD_Controller:
 		# Serial.write(0xFF)
 		# Serial.write(0xFF)
 		# Serial.write(0xFF)
-		self.ser.write(0xFF)	
-		self.ser.write(0xFF)
-		self.ser.write(0xFF)
+		self.ser.write(bytearray([0xFF, 0xFF, 0xFF]))	
 
 def init_system():
 	global room_map, lcd, breakevent
