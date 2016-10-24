@@ -51,6 +51,9 @@ GPIO.setup(25, GPIO.OUT) #RED led
 RF_PORT = "/dev/ttyUSB0"
 RF_BAUDRATE = 9600
 
+LCD_PORT = "/dev/ttyAMA0"
+LCD_BAUDRATE = 9600
+
 breakevent = threading.Event()
 
 STATUS_DONE = 0
@@ -251,27 +254,44 @@ class LCD_Controller:
 	FIELD_HUMIT = 1
 	FIELD_BATTERY = 2
 
+	ser = serial.Serial()
 	buff_read = bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-	def __init__(self):
-		Serial.begin(9600)
-		self.refesh()
+
+	def __init__(self, port, baudrate, timeout):
+		self.ser.port = port
+		self.ser.baudrate = baudrate
+		self.ser.timeout = timeout
+		self.ser.open()
+		if self.ser.isOpen():
+			logger.info("Open LCD controller on port: " + self.ser.portstr)
+		else:
+			logger.error("Error when open LCD controller on port: " + self.ser.portstr)
+
+	# def __init__(self):
+	# 	Serial.begin(9600)
+	# 	self.refesh()
 
 	def refesh(self):
 		senddata = "page 1"
-		Serial.printstr(senddata)
+		# Serial.printstr(senddata)
+		self.write(senddata)
 		self.end_cmd()
 
-	def read(self):
+	def write(self, cmd):
+		data = map(ord, cmd)
+		logger.info("send " + binascii.hexlify(data))
+		self.ser.write(data)
 
-		temp_buff_read = Serial.readString()
-		logger.info("receive: " + temp_buff_read)
-		#Serial.flushInput()
-		#if len(temp_buff_read) < 7:
-		#	return -1
-		#logger.info("receive: " + binascii.hexlify(temp_buff_read))
-		#for index in range(len(temp_buff_read)):
-		#	self.buff_read[index] = temp_buff_read[index]
-		# self.process_data(self.buff_read)
+
+	def read(self):
+		temp_buff_read = self.ser.read(7)
+		self.ser.flushInput()
+		if len(temp_buff_read) < 7:
+			return -1
+		logger.info("receive: " + binascii.hexlify(temp_buff_read))
+		for index in range(len(temp_buff_read)):
+			self.buff_read[index] = temp_buff_read[index]
+		self.process_data(self.buff_read)
 
 	def update_data(self, field, index, data):
 		logger.info("update info room: " + str(index + 1) + " field: " + str(field) + " data: " + str(data))
@@ -279,7 +299,8 @@ class LCD_Controller:
 			senddata =  "t" + str(index*3 + field) + ".txt=\"" + str(data) + "\""
 		else:
 			senddata =  "t" + str(index*3 + field) + ".txt=\"-\""
-		Serial.printstr(senddata)
+		# Serial.printstr(senddata)
+		self.write(senddata)
 		self.end_cmd()
 
 	def update_info(self, room):
@@ -292,51 +313,63 @@ class LCD_Controller:
 		if room.status == STATUS_DONE:
 			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
 			logger.info(senddata)
-			Serial.printstr(senddata)
+			# Serial.printstr(senddata)
+			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis t" + str(18 + (room.id - 1)*2 + 1) + ",0"
 			logger.info(senddata)
-			Serial.printstr(senddata)
+			# Serial.printstr(senddata)
+			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis n" + str(room.id - 1) + ",1"
 			logger.info(senddata)
-			Serial.printstr(senddata)
+			# Serial.printstr(senddata)
+			self.write(senddata)
 			self.end_cmd()
 		elif room.status == STATUS_NEW:
 			print("NEW")
 			senddata =  "vis t" + str(18 + (room.id - 1)*2 + 1) + ",0"
-			Serial.printstr(senddata)
+			# Serial.printstr(senddata)
+			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",1"
 			logger.info(senddata)
-			Serial.printstr(senddata)
+			# Serial.printstr(senddata)
+			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis n" + str(room.id - 1) + ",1"
-			Serial.printstr(senddata)
+			# Serial.printstr(senddata)
+			self.write(senddata)
 			self.end_cmd()
 		elif room.status == STATUS_PROCESS:
 			print("PROCESS")
 			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
 			logger.info(senddata)
-			Serial.printstr(senddata)
+			# Serial.printstr(senddata)
+			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis t" + str(18 + (room.id - 1)*2 + 1) + ",1"
-			Serial.printstr(senddata)
+			# Serial.printstr(senddata)
+			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis n" + str(room.id - 1) + ",1"
-			Serial.printstr(senddata)
+			# Serial.printstr(senddata)
+			self.write(senddata)
 			self.end_cmd()
 
 
 	def end_cmd(self):
-		Serial.write(0xFF)
-		Serial.write(0xFF)
-		Serial.write(0xFF)	
+		# Serial.write(0xFF)
+		# Serial.write(0xFF)
+		# Serial.write(0xFF)
+		self.ser.write(0xFF)	
+		self.ser.write(0xFF)
+		self.ser.write(0xFF)
 
 def init_system():
 	global room_map, lcd, breakevent
 	room_map = [Room(1), Room(2), Room(3), Room(4), Room(5), Room(6)]
-	lcd = LCD_Controller()
+	lcd = LCD_Controller(LCD_PORT, LCD_BAUDRATE, 0.2)
 	lcd.refesh()
 	alarm_system = AlarmSystem(breakevent)
 	handler_alarm = SignalHandler(breakevent,alarm_system)
