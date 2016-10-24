@@ -67,6 +67,7 @@ bell = 0
 
 room_map = None
 lcd = None
+rf_controller = None
 
 ###############################################################################
 class SignalHandler:
@@ -267,19 +268,13 @@ class LCD_Controller:
 		else:
 			logger.error("Error when open LCD controller on port: " + self.ser.portstr)
 
-	# def __init__(self):
-	# 	Serial.begin(9600)
-	# 	self.refesh()
-
 	def refesh(self):
 		senddata = "page 1"
-		# Serial.printstr(senddata)
 		self.write(senddata)
 		self.end_cmd()
 
 	def write(self, cmd):
-		#data = map(ord, cmd)
-		#logger.info("send " + binascii.hexlify(data))
+		logger.info("send " + cmd)
 		self.ser.write(cmd)
 
 
@@ -291,15 +286,36 @@ class LCD_Controller:
 		logger.info("receive: " + binascii.hexlify(temp_buff_read))
 		for index in range(len(temp_buff_read)):
 			self.buff_read[index] = temp_buff_read[index]
-		#self.process_data(self.buff_read)
+		self.process_data(self.buff_read)
 
+	def process_data(self, data):
+		global room_map, rf_controller
+		room_id = 0
+		if data[0] == 0x65 and data[1] == 0x03 and data[3] == 0x00 and data[4] == 0xff and data[5] == 0xff and data[6] == 0xff:
+			logger.info("button " + data[2])
+			if data[2] == 0x25:
+				room_id = 1
+			elif data[2] == 0x26:
+				room_id = 2
+			elif data[2] == 0x27:
+				room_id = 3
+			elif data[2] == 0x28:
+				room_id = 4
+			elif data[2] == 0x29:
+				room_id = 5
+			elif data[2] == 0x2a:
+				room_id = 6
+			logger.info("room " + room_id)
+			if room_id > 0:
+				room = room_map[room_id - 1]
+				if room:
+					rf_controller.write(room)
 	def update_data(self, field, index, data):
 		logger.info("update info room: " + str(index + 1) + " field: " + str(field) + " data: " + str(data))
 		if data > 0:
 			senddata =  "t" + str(index*3 + field) + ".txt=\"" + str(data) + "\""
 		else:
 			senddata =  "t" + str(index*3 + field) + ".txt=\"-\""
-		# Serial.printstr(senddata)
 		self.write(senddata)
 		self.end_cmd()
 
@@ -313,55 +329,43 @@ class LCD_Controller:
 		if room.status == STATUS_DONE:
 			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
 			logger.info(senddata)
-			# Serial.printstr(senddata)
 			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis t" + str(18 + (room.id - 1)*2 + 1) + ",0"
 			logger.info(senddata)
-			# Serial.printstr(senddata)
 			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis n" + str(room.id - 1) + ",1"
 			logger.info(senddata)
-			# Serial.printstr(senddata)
 			self.write(senddata)
 			self.end_cmd()
 		elif room.status == STATUS_NEW:
 			print("NEW")
 			senddata =  "vis t" + str(18 + (room.id - 1)*2 + 1) + ",0"
-			# Serial.printstr(senddata)
 			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",1"
 			logger.info(senddata)
-			# Serial.printstr(senddata)
 			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis n" + str(room.id - 1) + ",1"
-			# Serial.printstr(senddata)
 			self.write(senddata)
 			self.end_cmd()
 		elif room.status == STATUS_PROCESS:
 			print("PROCESS")
 			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
 			logger.info(senddata)
-			# Serial.printstr(senddata)
 			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis t" + str(18 + (room.id - 1)*2 + 1) + ",1"
-			# Serial.printstr(senddata)
 			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis n" + str(room.id - 1) + ",1"
-			# Serial.printstr(senddata)
 			self.write(senddata)
 			self.end_cmd()
 
 
 	def end_cmd(self):
-		# Serial.write(0xFF)
-		# Serial.write(0xFF)
-		# Serial.write(0xFF)
 		self.ser.write(bytearray([0xFF, 0xFF, 0xFF]))	
 
 def init_system():
