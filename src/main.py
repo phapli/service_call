@@ -198,8 +198,10 @@ class RF_Controller:
 			room_id = data[1]
 			room = room_map[room_id-1]
 			if room:
+				logger.info(room.status)
 				if room.status == STATUS_DONE:
 					room.status = STATUS_NEW
+					logger.info("change status")
 					lcd.change_status(room)
 				self.write_ack(self.CMD_UPDATE,room_id)
 			return 0
@@ -241,34 +243,35 @@ class LCD_Controller:
 		self.update_data(self.FIELD_BATTERY, room.id - 1, room.battery)
 
 	def change_status(self, room):
+		logger.info(room.status)
 		if room.status == STATUS_DONE:
-			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ", 0"
+			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
 			Serial.printstr(senddata)
 			self.end_cmd()
-			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ", 0"
+			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
 			Serial.printstr(senddata)
 			self.end_cmd()
-			senddata =  "vis n" + str(room.id - 1) + ", 1"
+			senddata =  "vis n" + str(room.id - 1) + ",1"
 			Serial.printstr(senddata)
 			self.end_cmd()
 		elif room.status == STATUS_NEW:
-			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ", 1"
+			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",1"
 			Serial.printstr(senddata)
 			self.end_cmd()
-			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ", 0"
+			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
 			Serial.printstr(senddata)
 			self.end_cmd()
-			senddata =  "vis n" + str(room.id - 1) + ", 1"
+			senddata =  "vis n" + str(room.id - 1) + ",1"
 			Serial.printstr(senddata)
 			self.end_cmd()
 		elif room.status == STATUS_PROCESS:
-			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ", 0"
+			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
 			Serial.printstr(senddata)
 			self.end_cmd()
-			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ", 1"
+			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",1"
 			Serial.printstr(senddata)
 			self.end_cmd()
-			senddata =  "vis n" + str(room.id - 1) + ", 1"
+			senddata =  "vis n" + str(room.id - 1) + ",1"
 			Serial.printstr(senddata)
 			self.end_cmd()
 
