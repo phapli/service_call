@@ -289,24 +289,26 @@ class LCD_Controller:
 
 	def process_data(self, data):
 		global room_map, rf_controller
-		room_id = 0x00
+		room_id = 0
 		if data[0] == 0x65 and data[1] == 0x03 and data[3] == 0x00 and data[4] == 0xff and data[5] == 0xff and data[6] == 0xff:
 			logger.info("button " + str(data[2]))
 			if data[2] == 0x25:
-				room_id = 0x01
+				room_id = 1
 			elif data[2] == 0x26:
-				room_id = 0x02
+				room_id = 2
 			elif data[2] == 0x27:
-				room_id = 0x03
+				room_id = 3
 			elif data[2] == 0x28:
-				room_id = 0x04
+				room_id = 4
 			elif data[2] == 0x29:
-				room_id = 0x05
+				room_id = 5
 			elif data[2] == 0x2a:
-				room_id = 0x06
+				room_id = 6
 			logger.info("room " + str(room_id))
-			if room_id != 0x00:
-				rf_controller.write_process(room_id)
+			if room_id != 0:
+				room = room_map[room_id-1]
+				if room and room.status == STATUS_NEW:
+					rf_controller.write_process(room_id)
 	def update_data(self, field, index, data):
 		logger.info("update info room: " + str(index + 1) + " field: " + str(field) + " data: " + str(data))
 		if data > 0:
