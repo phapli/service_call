@@ -307,17 +307,17 @@ class LCD_Controller:
 		room_id = 0
 		if data[0] == 0x65 and data[1] == 0x03 and data[3] == 0x00 and data[4] == 0xff and data[5] == 0xff and data[6] == 0xff:
 			logger.info("button " + str(data[2]))
-			if data[2] == 0x25:
+			if data[2] == 0x31:
 				room_id = 1
-			elif data[2] == 0x26:
+			elif data[2] == 0x32:
 				room_id = 2
-			elif data[2] == 0x27:
+			elif data[2] == 0x33:
 				room_id = 3
-			elif data[2] == 0x28:
+			elif data[2] == 0x34:
 				room_id = 4
-			elif data[2] == 0x29:
+			elif data[2] == 0x35:
 				room_id = 5
-			elif data[2] == 0x2a:
+			elif data[2] == 0x36:
 				room_id = 6
 			logger.info("room " + str(room_id))
 			if room_id != 0:
@@ -342,15 +342,18 @@ class LCD_Controller:
 		logger.info(room.status)
 		if room.status == STATUS_DONE:
 			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
-			logger.info(senddata)
 			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis t" + str(18 + (room.id - 1)*2 + 1) + ",0"
-			logger.info(senddata)
 			self.write(senddata)
 			self.end_cmd()
-			senddata =  "vis n" + str(room.id - 1) + ",1"
-			logger.info(senddata)
+			senddata =  "vis n" + str((room.id - 1)*3) + ",1"
+			self.write(senddata)
+			self.end_cmd()
+			senddata =  "vis n" + str((room.id - 1)*3 + 1) + ",0"
+			self.write(senddata)
+			self.end_cmd()
+			senddata =  "vis n" + str((room.id - 1)*3 + 2) + ",0"
 			self.write(senddata)
 			self.end_cmd()
 		elif room.status == STATUS_NEW:
@@ -359,22 +362,32 @@ class LCD_Controller:
 			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",1"
-			logger.info(senddata)
 			self.write(senddata)
 			self.end_cmd()
-			senddata =  "vis n" + str(room.id - 1) + ",1"
+			senddata =  "vis n" + str((room.id - 1)*3) + ",0"
+			self.write(senddata)
+			self.end_cmd()
+			senddata =  "vis n" + str((room.id - 1)*3 + 1) + ",1"
+			self.write(senddata)
+			self.end_cmd()
+			senddata =  "vis n" + str((room.id - 1)*3 + 2) + ",0"
 			self.write(senddata)
 			self.end_cmd()
 		elif room.status == STATUS_PROCESS:
 			print("PROCESS")
 			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
-			logger.info(senddata)
 			self.write(senddata)
 			self.end_cmd()
 			senddata =  "vis t" + str(18 + (room.id - 1)*2 + 1) + ",1"
 			self.write(senddata)
 			self.end_cmd()
-			senddata =  "vis n" + str(room.id - 1) + ",1"
+			senddata =  "vis n" + str((room.id - 1)*3) + ",0"
+			self.write(senddata)
+			self.end_cmd()
+			senddata =  "vis n" + str((room.id - 1)*3 + 1) + ",0"
+			self.write(senddata)
+			self.end_cmd()
+			senddata =  "vis n" + str((room.id - 1)*3 + 2) + ",1"
 			self.write(senddata)
 			self.end_cmd()
 
