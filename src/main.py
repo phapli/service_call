@@ -105,7 +105,7 @@ class AlarmSystem(threading.Thread):
 				if room.status == STATUS_NEW:
 					alarm_status = 2
 					break
-				elif room_status == STATUS_PROCESS:
+				elif room.status == STATUS_PROCESS:
 					alarm_status = 1
 			if alarm_status == 0:
 				#  green status
@@ -115,16 +115,18 @@ class AlarmSystem(threading.Thread):
 				time.sleep(2)
 				GPIO.output(23, 1)
 				time.sleep(2)
-			elif: alarm_status == 1:
+			elif alarm_status == 1:
 				# yellow status
+				logger.info("yellow status")
 				GPIO.output(23, 1)
 				GPIO.output(12, 0)
 				GPIO.output(25, 0)
 				time.sleep(2)
 				GPIO.output(25, 1)
 				time.sleep(2)
-			elif: alarm_status == 2:
+			elif alarm_status == 2:
 				# red status
+				logger.info("red status")
 				GPIO.output(23, 1)
 				GPIO.output(12, 1)
 				GPIO.output(25, 0)
@@ -187,7 +189,7 @@ class RF_Controller:
 	def write_process(self, room):
 		room.pending_cmd = True
 		room.last_send_time = time.time()
-		data = bytearray([self.CMD_PROCESS, room, 0x00, 0x00, 0x00])
+		data = bytearray([self.CMD_PROCESS, room.id, 0x00, 0x00, 0x00])
 		self.write(data)
 
 	def write_ack(self, cmd, room):
@@ -323,7 +325,7 @@ class LCD_Controller:
 			if room_id != 0:
 				room = room_map[room_id-1]
 				if room and room.status == STATUS_NEW:
-					rf_controller.write_process(room_id)
+					rf_controller.write_process(room)
 	def update_data(self, field, index, data):
 		logger.info("update info room: " + str(index + 1) + " field: " + str(field) + " data: " + str(data))
 		if data > 0:
@@ -411,11 +413,13 @@ def main():
 	logger.info("Opening rf")
 	rf_controller = RF_Controller(RF_PORT, RF_BAUDRATE, 0.2)
 	logger.info("Open rf OK")
-	
+	start = time.time()
 	while 1:
+		logger.info("process time " + str(time.time() - start))
+		start = time.time()
 		check_data = rf_controller.read()
 		for room in room_map:
-			if time.time() - room.last_update >= 10:
+			if time.time() - room.last_update >= 7*60:
 				room.temp = -1
 				room.humit = -1
 				room.battery = -1
@@ -426,9 +430,9 @@ def main():
 					# cancel
 					room.retry_count = 0
 					room.pending_cmd = False
-				elif time.time() - room.last_send_time >= 1:
+				elif time.time() - room.last_send_time >= 10:
 					room.retry_count += 1
-					rf_controller.write_process(room.id)
+					rf_controller.write_process(room)
 					room.last_send_time = time.time()
 					
 	Serial.end()
