@@ -14,6 +14,7 @@ import logging
 import os.path
 import re
 from logging.handlers import RotatingFileHandler
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 logger = logging.getLogger(__name__)
 def initialize_logger(output_dir):
@@ -91,6 +92,35 @@ class LCD_Process(threading.Thread):
 	def run(self):
 		while not self.stopper.is_set():
 			lcd.read()
+###############################################################################		
+class RF_Process(threading.Thread):
+	stopper = None
+	rf = None
+	def __init__(self, stopper, rf):
+		super(RF_Process, self).__init__()
+		self.stopper = stopper
+		self.rf = rf
+	def run(self):
+		while not self.stopper.is_set():
+			logger.info("process time " + str(time.time() - start))
+			start = time.time()
+			check_data = rf_controller.read()
+			for room in room_map:
+				if time.time() - room.last_update >= 7*60:
+					room.temp = -1
+					room.humit = -1
+					room.battery = -1
+					room.last_update = time.time()
+					lcd.update_info(room)
+				if room.pending_cmd == True:
+					if room.retry_count >=2:
+						# cancel
+						room.retry_count = 0
+						room.pending_cmd = False
+					elif time.time() - room.last_send_time >= 10:
+						room.retry_count += 1
+						rf_controller.write_process(room)
+						room.last_send_time = time.time()
 ###############################################################################		
 class AlarmSystem(threading.Thread):
 	stopper = None
@@ -398,10 +428,12 @@ class LCD_Controller:
 		self.ser.write(bytearray([0xFF, 0xFF, 0xFF]))	
 
 def init_system():
-	global room_map, lcd, breakevent
+	global room_map, lcd, breakevent, rf_controller
 	room_map = [Room(1), Room(2), Room(3), Room(4), Room(5), Room(6)]
 	lcd = LCD_Controller(LCD_PORT, LCD_BAUDRATE, 0.2)
 	lcd.refesh()
+	rf_controller = RF_Controller(RF_PORT, RF_BAUDRATE, 0.2)
+
 	alarm_system = AlarmSystem(breakevent)
 	handler_alarm = SignalHandler(breakevent,alarm_system)
 	signal.signal(signal.SIGINT, handler_alarm)
@@ -412,44 +444,47 @@ def init_system():
 	signal.signal(signal.SIGINT, handler_lcd)
 	lcd_process.start()
 
+	rf_process = RF_Process(breakevent, rf_controller)
+	handler_rf = SignalHandler(breakevent,rf_process)
+	signal.signal(signal.SIGINT, handler_rf)
+	rf_process.start()
 ###############################################################################
+class Server(BaseHTTPRequestHandler):
+    def _set_headers(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
 
+    def do_GET(self):
+        self._set_headers()
+        self.wfile.write("<html><body><h1>hi!</h1></body></html>")
 
-def main():
-	"""Main function
-	"""
-	global rf_controller, room_map, lcd
+    def do_HEAD(self):
+        self._set_headers()
+        
+    def do_POST(self):
+        # Doesn't do anything with posted data
+        self._set_headers()
+        self.wfile.write("<html><body><h1>POST!</h1></body></html>")
+
+###############################################################################
+def main(server_class=HTTPServer, handler_class=Server, port=80):
+
+	logger.info("Init ...")
 	init_system()
-
-	logger.info("Service Call System Start ...")
-	global breakevent
-	logger.info("Opening rf")
-	rf_controller = RF_Controller(RF_PORT, RF_BAUDRATE, 0.2)
-	logger.info("Open rf OK")
-	start = time.time()
-	while 1:
-		logger.info("process time " + str(time.time() - start))
-		start = time.time()
-		check_data = rf_controller.read()
-		for room in room_map:
-			if time.time() - room.last_update >= 7*60:
-				room.temp = -1
-				room.humit = -1
-				room.battery = -1
-				room.last_update = time.time()
-				lcd.update_info(room)
-			if room.pending_cmd == True:
-				if room.retry_count >=2:
-					# cancel
-					room.retry_count = 0
-					room.pending_cmd = False
-				elif time.time() - room.last_send_time >= 10:
-					room.retry_count += 1
-					rf_controller.write_process(room)
-					room.last_send_time = time.time()
+	server_address = ('', port)
+    httpd = server_class(server_address, handler_class)
+    logger.info("Calling Service Start ...")
+    httpd.serve_forever()
 					
 	Serial.end()
 ###############################################################################
 # Run
 ###############################################################################
-if __name__ == '__main__': main()
+if __name__ == '__main__': 
+	from sys import argv
+
+    if len(argv) == 2:
+        run(port=int(argv[1]))
+    else:
+        main()
