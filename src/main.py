@@ -15,6 +15,7 @@ import os.path
 import re
 from logging.handlers import RotatingFileHandler
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+import json
 
 logger = logging.getLogger(__name__)
 def initialize_logger(output_dir):
@@ -450,22 +451,24 @@ def init_system():
 	rf_process.start()
 ###############################################################################
 class Server(BaseHTTPRequestHandler):
-    def _set_headers(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
+    def _set_headers(self, content_type='text/html'):
+		self.send_response(200)
+		self.send_header('Content-type', 'text/html')
+		self.end_headers()
 
     def do_GET(self):
-        self._set_headers()
-        self.wfile.write("<html><body><h1>hi!</h1></body></html>")
+		self._set_headers()
+		self.wfile.write("<html><body><h1>hi!</h1></body></html>")
 
     def do_HEAD(self):
-        self._set_headers()
+		self._set_headers()
         
     def do_POST(self):
+		global room_map
         # Doesn't do anything with posted data
-        self._set_headers()
-        self.wfile.write("<html><body><h1>POST!</h1></body></html>")
+		self._set_headers('application/json')
+		data = json.dumps(room_map)
+		self.wfile.write(data)
 
 ###############################################################################
 def main(server_class=HTTPServer, handler_class=Server, port=80):
@@ -473,18 +476,16 @@ def main(server_class=HTTPServer, handler_class=Server, port=80):
 	logger.info("Init ...")
 	init_system()
 	server_address = ('', port)
-    httpd = server_class(server_address, handler_class)
-    logger.info("Calling Service Start ...")
-    httpd.serve_forever()
-					
-	Serial.end()
+	httpd = server_class(server_address, handler_class)
+	logger.info("Calling Service Start ...")
+	httpd.serve_forever()
 ###############################################################################
 # Run
 ###############################################################################
 if __name__ == '__main__': 
 	from sys import argv
 
-    if len(argv) == 2:
-        run(port=int(argv[1]))
-    else:
-        main()
+	if len(argv) == 2:
+		run(port=int(argv[1]))
+	else:
+		main()

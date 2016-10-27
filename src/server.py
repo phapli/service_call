@@ -17,6 +17,7 @@ Send a POST request::
 """
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import SocketServer
+import json
 
 class S(BaseHTTPRequestHandler):
     def _set_headers(self):
@@ -25,8 +26,12 @@ class S(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        self._set_headers()
-        self.wfile.write("<html><body><h1>hi!</h1></body></html>")
+        if self.path == '/time':
+
+            self._set_headers()
+            self.wfile.write("<html><body><h1>hi!</h1></body></html>")
+        else:
+            json.dump(row, outfile)
 
     def do_HEAD(self):
         self._set_headers()
@@ -35,6 +40,11 @@ class S(BaseHTTPRequestHandler):
         # Doesn't do anything with posted data
         self._set_headers()
         self.wfile.write("<html><body><h1>POST!</h1></body></html>")
+        
+        if self.path == '/time':
+            do_time(self)
+        elif self.path == '/date':
+            do_date(self)        
         
 def run(server_class=HTTPServer, handler_class=S, port=80):
     server_address = ('', port)
