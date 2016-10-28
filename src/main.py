@@ -180,6 +180,14 @@ class Room:
 
 	def __init__(self, room_id):
 		self.id = room_id
+		self.status = 0
+		self.temp = -1
+		self.humit = -1
+		self.battery = -1
+		self.last_update = 0
+		self.pending_cmd = False
+		self.last_send_time = 0
+		self.retry_count = 0
 	
 ###############################################################################
 class RF_Controller:
