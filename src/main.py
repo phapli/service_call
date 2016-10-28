@@ -102,6 +102,7 @@ class RF_Process(threading.Thread):
 		self.stopper = stopper
 		self.rf = rf
 	def run(self):
+		start = time.time()
 		while not self.stopper.is_set():
 			logger.info("process time " + str(time.time() - start))
 			start = time.time()
