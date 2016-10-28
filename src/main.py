@@ -469,9 +469,13 @@ class Server(BaseHTTPRequestHandler):
 		self.end_headers()
 		
 	def do_GET(self):
-		self._set_headers()
-		self.wfile.write("<html><body><h1>hi!</h1></body></html>")
-		
+		#self._set_headers()
+		#self.wfile.write("<html><body><h1>hi!</h1></body></html>")
+		global room_map
+                self._set_headers()
+                data = json.dumps(room_map, default=obj_dict)
+                self.wfile.write(data)	
+
 	def do_HEAD(self):
 		self._set_headers()
 		
@@ -497,6 +501,6 @@ if __name__ == '__main__':
 	from sys import argv
 
 	if len(argv) == 2:
-		run(port=int(argv[1]))
+		main(port=int(argv[1]))
 	else:
 		main()
