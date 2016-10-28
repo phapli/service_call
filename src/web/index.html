@@ -419,9 +419,21 @@
     <!-- /Doughnut Chart -->
     
     <!-- bootstrap-daterangepicker -->
-    <script>
+  <script>
+      function worker() {
+          $.ajax({
+            url: '/data', 
+            success: function(data) {
+              console.log(data);
+            },
+            complete: function() {
+              // Schedule the next request when the current one's complete
+              setTimeout(worker, 5000);
+            }
+          });
+      }
       $(document).ready(function() {
-
+        worker();
         $('.chart').easyPieChart({
           easing: 'easeOutBounce',
           lineWidth: '6',
