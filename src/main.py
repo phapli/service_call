@@ -428,6 +428,9 @@ class LCD_Controller:
 	def end_cmd(self):
 		self.ser.write(bytearray([0xFF, 0xFF, 0xFF]))	
 
+def obj_dict(obj):
+	return obj.__dict__
+
 def init_system():
 	global room_map, lcd, breakevent, rf_controller
 	room_map = [Room(1), Room(2), Room(3), Room(4), Room(5), Room(6)]
@@ -451,23 +454,22 @@ def init_system():
 	rf_process.start()
 ###############################################################################
 class Server(BaseHTTPRequestHandler):
-    def _set_headers(self, content_type='text/html'):
+	def _set_headers(self, content_type='text/html'):
 		self.send_response(200)
 		self.send_header('Content-type', 'text/html')
 		self.end_headers()
-
-    def do_GET(self):
+		
+	def do_GET(self):
 		self._set_headers()
 		self.wfile.write("<html><body><h1>hi!</h1></body></html>")
-
-    def do_HEAD(self):
+		
+	def do_HEAD(self):
 		self._set_headers()
-        
-    def do_POST(self):
+		
+	def do_POST(self):
 		global room_map
-        # Doesn't do anything with posted data
-		self._set_headers('application/json')
-		data = json.dumps(room_map)
+		self._set_headers()
+		data = json.dumps(room_map, default=obj_dict)
 		self.wfile.write(data)
 
 ###############################################################################
