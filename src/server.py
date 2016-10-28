@@ -19,6 +19,11 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import SocketServer
 import json
 
+
+
+
+def obj_dict(obj):
+    return obj.__dict__
 class S(BaseHTTPRequestHandler):
     def _set_headers(self):
         self.send_response(200)
@@ -26,25 +31,19 @@ class S(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        if self.path == '/time':
-
-            self._set_headers()
-            self.wfile.write("<html><body><h1>hi!</h1></body></html>")
-        else:
-            json.dump(row, outfile)
+        self._set_headers()
+        self.wfile.write("<html><body><h1>hi!</h1></body></html>")
 
     def do_HEAD(self):
         self._set_headers()
-        
+
     def do_POST(self):
         # Doesn't do anything with posted data
+        global room_map
         self._set_headers()
-        self.wfile.write("<html><body><h1>POST!</h1></body></html>")
-        
-        if self.path == '/time':
-            do_time(self)
-        elif self.path == '/date':
-            do_date(self)        
+        data = json.dumps(room_map, default=obj_dict)
+
+        self.wfile.write(data)     
         
 def run(server_class=HTTPServer, handler_class=S, port=80):
     server_address = ('', port)
@@ -52,6 +51,23 @@ def run(server_class=HTTPServer, handler_class=S, port=80):
     print 'Starting httpd...'
     httpd.serve_forever()
 
+##############################################################################
+class Room:
+	"""class for room status"""
+	id = 0
+	status = 0
+	temp = -1
+	humit = -1
+	battery = -1
+	last_update = 0
+	pending_cmd = False
+	last_send_time = 0
+	retry_count = 0
+
+	def __init__(self, room_id):
+		self.id = room_id
+
+room_map = [Room(1), Room(2), Room(3), Room(4), Room(5), Room(6)]
 if __name__ == "__main__":
     from sys import argv
 
