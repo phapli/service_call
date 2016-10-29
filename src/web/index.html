@@ -48,7 +48,7 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
-                  <h2>Room 1</h2>
+                  <h2><b>Room 1</b></h2>
                   <ul class="nav navbar-right panel_toolbox">
                     <li>
                       <i id="status1" class="fa fa-circle green fa-4x"></i>
@@ -99,7 +99,7 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
-                  <h2>Room 2</h2>
+                  <h2><b>Room 2</b></h2>
                   <ul class="nav navbar-right panel_toolbox">
                     <li>
                       <i id="status2" class="fa fa-circle green fa-4x"></i>
@@ -150,7 +150,7 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
-                  <h2>Room 3</h2>
+                  <h2><b>Room 3</b></h2>
                   <ul class="nav navbar-right panel_toolbox">
                     <li>
                       <i id="status3" class="fa fa-circle green fa-4x"></i>
@@ -204,7 +204,7 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
-                  <h2>Room 4</h2>
+                  <h2><b>Room 4</b></h2>
                   <ul class="nav navbar-right panel_toolbox">
                     <li>
                       <i id="status4" class="fa fa-circle green fa-4x"></i>
@@ -255,7 +255,7 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
-                  <h2>Room 5</h2>
+                  <h2><b>Room 5</b></h2>
                   <ul class="nav navbar-right panel_toolbox">
                     <li>
                       <i id="status5" class="fa fa-circle green fa-4x"></i>
@@ -306,7 +306,7 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
-                  <h2>Room 6</h2>
+                  <h2><b>Room 6</b></h2>
                   <ul class="nav navbar-right panel_toolbox">
                     <li>
                       <i id="status6" class="fa fa-circle green fa-4x"></i>
@@ -388,7 +388,7 @@
       $(document).ready(function() {
         $('.chart_temp').easyPieChart({
           easing: 'easeOutBounce',
-          lineWidth: '6',
+          lineWidth: '3',
           barColor: function (percent) {
             return (percent < 35 ? '#5cb85c' : percent < 40 ? '#f0ad4e' : '#cb3935');
           },
@@ -404,7 +404,7 @@
         });
         $('.chart_humit').easyPieChart({
           easing: 'easeOutBounce',
-          lineWidth: '6',
+          lineWidth: '3',
           barColor: function (percent) {
             return (percent < 60 ? '#5cb85c' : percent < 70 ? '#f0ad4e' : '#cb3935');
           },
@@ -420,7 +420,7 @@
         });
         $('.chart_batt').easyPieChart({
           easing: 'easeOutBounce',
-          lineWidth: '6',
+          lineWidth: '3',
           barColor: function (percent) {
             return (percent <= 5 ? '#cb3935' : percent <= 20 ? '#f0ad4e' : '#5cb85c');
           },
