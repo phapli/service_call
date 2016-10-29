@@ -56,6 +56,11 @@
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
                   <h2>Room 1</h2>
+                  <ul class="nav navbar-right panel_toolbox">
+                    <li>
+                      <i class="fa fa-circle green fa-4x"></i>
+                    </li>
+                  </ul>
                   <div class="clearfix"></div>
                 </div>
                 <div class="x_content">
@@ -102,6 +107,11 @@
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
                   <h2>Room 2</h2>
+                  <ul class="nav navbar-right panel_toolbox">
+                    <li>
+                      <i class="fa fa-circle green fa-4x"></i>
+                    </li>
+                  </ul>
                   <div class="clearfix"></div>
                 </div>
                 <div class="x_content">
@@ -148,6 +158,11 @@
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
                   <h2>Room 3</h2>
+                  <ul class="nav navbar-right panel_toolbox">
+                    <li>
+                      <i class="fa fa-circle green fa-4x"></i>
+                    </li>
+                  </ul>
                   <div class="clearfix"></div>
                 </div>
                 <div class="x_content">
@@ -196,7 +211,12 @@
             <div class="col-md-4 col-sm-4 col-xs-12">
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
-                  <h2>Room 1</h2>
+                  <h2>Room 4</h2>
+                  <ul class="nav navbar-right panel_toolbox">
+                    <li>
+                      <i class="fa fa-circle green fa-4x"></i>
+                    </li>
+                  </ul>
                   <div class="clearfix"></div>
                 </div>
                 <div class="x_content">
@@ -243,6 +263,11 @@
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
                   <h2>Room 5</h2>
+                  <ul class="nav navbar-right panel_toolbox">
+                    <li>
+                      <i class="fa fa-circle green fa-4x"></i>
+                    </li>
+                  </ul>
                   <div class="clearfix"></div>
                 </div>
                 <div class="x_content">
@@ -289,6 +314,11 @@
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
                   <h2>Room 6</h2>
+                  <ul class="nav navbar-right panel_toolbox">
+                    <li>
+                      <i class="fa fa-circle green fa-4x"></i>
+                    </li>
+                  </ul>
                   <div class="clearfix"></div>
                 </div>
                 <div class="x_content">
@@ -425,6 +455,14 @@
                   chart_humit.update(room.humit);
                   var chart_batt = window.chart = $('#chart' + room.id + '3').data('easyPieChart');
                   chart_batt.update(room.battery);
+                  if(room.status == 0){
+                    $('#status' + room.id).removeClass('red').removeClass('yellow').addClass('green');
+                  } else if (room.status == 1){
+                    $('#status' + room.id).removeClass('green').removeClass('yellow').addClass('red');
+                  } else if (room.status == 2){
+                    $('#status' + room.id).removeClass('red').removeClass('green').addClass('yellow');
+                  }
+                  
               });
             },
             complete: function() {
