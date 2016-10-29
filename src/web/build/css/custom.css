@@ -2477,6 +2477,18 @@ ul.social li {
   margin-left: 0.1em;
   font-size: .8em; }
 
+.celsius { 
+  display: inline-block;
+  line-height: 110px;
+  z-index: 2;
+  font-size: 18px;
+  }
+
+.celsius:after{ 
+  content: "℃";
+  margin-left: 0.1em; 
+  font-size: .8em; }
+
 .angular {
   margin-top: 100px; }
 
