@@ -377,11 +377,11 @@ class LCD_Controller:
 
 	def update_icon(self, field, index, data):
 		if field == self.FIELD_TEMP:
-			if data < 30 and data > 40:
+			if data < 30 or data > 40:
 				self.write("vis p" + str(index*9) + ",1")
 				self.write("vis p" + str(index*9 + 1) + ",0")
 				self.write("vis p" + str(index*9 + 2) + ",0")
-			elif data > 35 and data <= 40:
+			elif data > 35 or data <= 40:
 				self.write("vis p" + str(index*9) + ",0")
 				self.write("vis p" + str(index*9 + 1) + ",1")
 				self.write("vis p" + str(index*9 + 2) + ",0")
@@ -394,7 +394,7 @@ class LCD_Controller:
 				self.write("vis p" + str(index*9 + 3) + ",1")
 				self.write("vis p" + str(index*9 + 4) + ",0")
 				self.write("vis p" + str(index*9 + 5) + ",0")
-			elif data >= 60 and data <= 70:
+			elif data >= 60 or data <= 70:
 				self.write("vis p" + str(index*9 + 3) + ",0")
 				self.write("vis p" + str(index*9 + 4) + ",1")
 				self.write("vis p" + str(index*9 + 5) + ",0")
@@ -407,7 +407,7 @@ class LCD_Controller:
 				self.write("vis p" + str(index*9 + 6) + ",1")
 				self.write("vis p" + str(index*9 + 7) + ",0")
 				self.write("vis p" + str(index*9 + 8) + ",0")
-			elif data > 5 and data <= 20:
+			elif data > 5 or data <= 20:
 				self.write("vis p" + str(index*9 + 6) + ",0")
 				self.write("vis p" + str(index*9 + 7) + ",1")
 				self.write("vis p" + str(index*9 + 8) + ",0")
