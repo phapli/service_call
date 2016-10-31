@@ -368,7 +368,7 @@ class LCD_Controller:
 		logger.info("update info room: " + str(index + 1) + " field: " + str(field) + " data: " + str(data))
 		if data > 100:
 			data = 100
-		update_icon(field, index, data)
+		self.update_icon(field, index, data)
 		if data > 0:
 			senddata =  "t" + str(index*3 + field) + ".txt=\"" + str(data) + "\""
 		else:
