@@ -50,10 +50,10 @@ GPIO.setup(12, GPIO.OUT) #Buzzer
 GPIO.setup(23, GPIO.OUT) #GREEN led
 GPIO.setup(25, GPIO.OUT) #RED led
 
-RF_PORT = "/dev/ttyUSB0"
+RF_PORT = "/dev/ttyUSB0")
 RF_BAUDRATE = 9600
 
-LCD_PORT = "/dev/ttyAMA0"
+LCD_PORT = "/dev/ttyAMA0")
 LCD_BAUDRATE = 9600
 
 breakevent = threading.Event()
@@ -325,14 +325,12 @@ class LCD_Controller:
 			logger.error("Error when open LCD controller on port: " + self.ser.portstr)
 
 	def refesh(self):
-		senddata = "page 1"
-		self.write(senddata)
-		self.end_cmd()
+		self.write("page 1")
 
 	def write(self, cmd):
 		logger.info("send " + cmd)
 		self.ser.write(cmd)
-
+		self.end_cmd()
 
 	def read(self):
 		temp_buff_read = self.ser.read(7)
@@ -349,17 +347,17 @@ class LCD_Controller:
 		room_id = 0
 		if data[0] == 0x65 and data[1] == 0x03 and data[3] == 0x00 and data[4] == 0xff and data[5] == 0xff and data[6] == 0xff:
 			logger.info("button " + str(data[2]))
-			if data[2] == 0x31:
+			if data[2] == 0x67:
 				room_id = 1
-			elif data[2] == 0x32:
+			elif data[2] == 0x68:
 				room_id = 2
-			elif data[2] == 0x33:
+			elif data[2] == 0x69:
 				room_id = 3
-			elif data[2] == 0x34:
+			elif data[2] == 0x6a:
 				room_id = 4
-			elif data[2] == 0x35:
+			elif data[2] == 0x6b:
 				room_id = 5
-			elif data[2] == 0x36:
+			elif data[2] == 0x6c:
 				room_id = 6
 			logger.info("room " + str(room_id))
 			if room_id != 0:
@@ -368,12 +366,55 @@ class LCD_Controller:
 					rf_controller.write_process(room)
 	def update_data(self, field, index, data):
 		logger.info("update info room: " + str(index + 1) + " field: " + str(field) + " data: " + str(data))
+		if data > 100:
+			data = 100
+		update_icon(field, index, data)
 		if data > 0:
 			senddata =  "t" + str(index*3 + field) + ".txt=\"" + str(data) + "\""
 		else:
 			senddata =  "t" + str(index*3 + field) + ".txt=\"-\""
 		self.write(senddata)
-		self.end_cmd()
+
+	def update_icon(self, field, index, data):
+		if field == self.FIELD_TEMP:
+			if data < 30 AND data > 40:
+				self.write("vis p" + str(index*9) + ",1")
+				self.write("vis p" + str(index*9 + 1) + ",0")
+				self.write("vis p" + str(index*9 + 2) + ",0")
+			elif data > 35 AND data <= 40:
+				self.write("vis p" + str(index*9) + ",0")
+				self.write("vis p" + str(index*9 + 1) + ",1")
+				self.write("vis p" + str(index*9 + 2) + ",0")
+			else:
+				self.write("vis p" + str(index*9) + ",0")
+				self.write("vis p" + str(index*9 + 1) + ",0")
+				self.write("vis p" + str(index*9 + 2) + ",1")
+		elif field == self.FIELD_HUMIT:
+			if data > 70:
+				self.write("vis p" + str(index*9 + 3) + ",1")
+				self.write("vis p" + str(index*9 + 4) + ",0")
+				self.write("vis p" + str(index*9 + 5) + ",0")
+			elif data >= 60 AND data <= 70:
+				self.write("vis p" + str(index*9 + 3) + ",0")
+				self.write("vis p" + str(index*9 + 4) + ",1")
+				self.write("vis p" + str(index*9 + 5) + ",0")
+			else:
+				self.write("vis p" + str(index*9 + 3) + ",0")
+				self.write("vis p" + str(index*9 + 4) + ",0")
+				self.write("vis p" + str(index*9 + 5) + ",1")
+		elif field == self.FIELD_BATTERY:
+			if data <= 5:
+				self.write("vis p" + str(index*9 + 6) + ",1")
+				self.write("vis p" + str(index*9 + 7) + ",0")
+				self.write("vis p" + str(index*9 + 8) + ",0")
+			elif data > 5 AND data <= 20:
+				self.write("vis p" + str(index*9 + 6) + ",0")
+				self.write("vis p" + str(index*9 + 7) + ",1")
+				self.write("vis p" + str(index*9 + 8) + ",0")
+			else:
+				self.write("vis p" + str(index*9 + 6) + ",0")
+				self.write("vis p" + str(index*9 + 7) + ",0")
+				self.write("vis p" + str(index*9 + 8) + ",1")
 
 	def update_info(self, room):
 		self.update_data(self.FIELD_TEMP, room.id - 1, room.temp)
@@ -383,55 +424,25 @@ class LCD_Controller:
 	def change_status(self, room):
 		logger.info(room.status)
 		if room.status == STATUS_DONE:
-			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
-			self.write(senddata)
-			self.end_cmd()
-			senddata =  "vis t" + str(18 + (room.id - 1)*2 + 1) + ",0"
-			self.write(senddata)
-			self.end_cmd()
-			senddata =  "vis n" + str((room.id - 1)*3) + ",1"
-			self.write(senddata)
-			self.end_cmd()
-			senddata =  "vis n" + str((room.id - 1)*3 + 1) + ",0"
-			self.write(senddata)
-			self.end_cmd()
-			senddata =  "vis n" + str((room.id - 1)*3 + 2) + ",0"
-			self.write(senddata)
-			self.end_cmd()
+			self.write("vis t" + str(18 + (room.id - 1)*2) + ",0")
+			self.write("vis t" + str(18 + (room.id - 1)*2 + 1) + ",0")
+			self.write("vis n" + str((room.id - 1)*3) + ",1")
+			self.write("vis n" + str((room.id - 1)*3 + 1) + ",0")
+			self.write("vis n" + str((room.id - 1)*3 + 2) + ",0")
 		elif room.status == STATUS_NEW:
 			print("NEW")
-			senddata =  "vis t" + str(18 + (room.id - 1)*2 + 1) + ",0"
-			self.write(senddata)
-			self.end_cmd()
-			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",1"
-			self.write(senddata)
-			self.end_cmd()
-			senddata =  "vis n" + str((room.id - 1)*3) + ",0"
-			self.write(senddata)
-			self.end_cmd()
-			senddata =  "vis n" + str((room.id - 1)*3 + 1) + ",1"
-			self.write(senddata)
-			self.end_cmd()
-			senddata =  "vis n" + str((room.id - 1)*3 + 2) + ",0"
-			self.write(senddata)
-			self.end_cmd()
+			self.write("vis t" + str(18 + (room.id - 1)*2 + 1) + ",0")
+			self.write("vis t" + str(18 + (room.id - 1)*2) + ",1")
+			self.write("vis n" + str((room.id - 1)*3) + ",0")
+			self.write("vis n" + str((room.id - 1)*3 + 1) + ",1")
+			self.write("vis n" + str((room.id - 1)*3 + 2) + ",0")
 		elif room.status == STATUS_PROCESS:
 			print("PROCESS")
-			senddata =  "vis t" + str(18 + (room.id - 1)*2) + ",0"
-			self.write(senddata)
-			self.end_cmd()
-			senddata =  "vis t" + str(18 + (room.id - 1)*2 + 1) + ",1"
-			self.write(senddata)
-			self.end_cmd()
-			senddata =  "vis n" + str((room.id - 1)*3) + ",0"
-			self.write(senddata)
-			self.end_cmd()
-			senddata =  "vis n" + str((room.id - 1)*3 + 1) + ",0"
-			self.write(senddata)
-			self.end_cmd()
-			senddata =  "vis n" + str((room.id - 1)*3 + 2) + ",1"
-			self.write(senddata)
-			self.end_cmd()
+			self.write("vis t" + str(18 + (room.id - 1)*2) + ",0")
+			self.write("vis t" + str(18 + (room.id - 1)*2 + 1) + ",1")
+			self.write("vis n" + str((room.id - 1)*3) + ",0")
+			self.write("vis n" + str((room.id - 1)*3 + 1) + ",0")
+			self.write("vis n" + str((room.id - 1)*3 + 2) + ",1")
 
 
 	def end_cmd(self):
