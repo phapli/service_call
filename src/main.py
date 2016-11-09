@@ -213,18 +213,31 @@ class RF_Controller:
 
 
 	def read(self):
-		temp_buff_read = self.ser.read(5)
+		temp_buff_read = self.ser.read(10)
 		self.ser.flushInput()
-		if len(temp_buff_read) < 5:
+		if len(temp_buff_read) < 10:
 			return -1
 		logger.info("receive: " + binascii.hexlify(temp_buff_read))
-		for index in range(len(temp_buff_read)):
+		for index in range(2,7):
 			self.buff_read[index] = temp_buff_read[index]
 		self.process_data(self.buff_read)
 
 	def write(self, data):
 		logger.info("send " + binascii.hexlify(data))
-		self.ser.write(data)
+		if len(data) != 5:
+			return
+		self.ser.write(0x55)
+		time.sleep(0.001)
+		self.ser.write(0xAA)
+		for index in range(len(data)):
+			time.sleep(0.001)
+			self.ser.write(data[index])
+		time.sleep(0.001)
+		self.ser.write(0xFF)
+		time.sleep(0.001)
+		self.ser.write(0xFF)
+		time.sleep(0.001)
+		self.ser.write(0xFF)
 
 	def write_process(self, room):
 		room.pending_cmd = True
@@ -381,7 +394,7 @@ class LCD_Controller:
 				self.write("vis p" + str(index*9) + ",1")
 				self.write("vis p" + str(index*9 + 1) + ",0")
 				self.write("vis p" + str(index*9 + 2) + ",0")
-			elif data > 35 or data <= 40:
+			elif data > 35 and data <= 40:
 				self.write("vis p" + str(index*9) + ",0")
 				self.write("vis p" + str(index*9 + 1) + ",1")
 				self.write("vis p" + str(index*9 + 2) + ",0")
@@ -394,7 +407,7 @@ class LCD_Controller:
 				self.write("vis p" + str(index*9 + 3) + ",1")
 				self.write("vis p" + str(index*9 + 4) + ",0")
 				self.write("vis p" + str(index*9 + 5) + ",0")
-			elif data >= 60 or data <= 70:
+			elif data >= 60 and data <= 70:
 				self.write("vis p" + str(index*9 + 3) + ",0")
 				self.write("vis p" + str(index*9 + 4) + ",1")
 				self.write("vis p" + str(index*9 + 5) + ",0")
@@ -407,7 +420,7 @@ class LCD_Controller:
 				self.write("vis p" + str(index*9 + 6) + ",1")
 				self.write("vis p" + str(index*9 + 7) + ",0")
 				self.write("vis p" + str(index*9 + 8) + ",0")
-			elif data > 5 or data <= 20:
+			elif data > 5 and data <= 20:
 				self.write("vis p" + str(index*9 + 6) + ",0")
 				self.write("vis p" + str(index*9 + 7) + ",1")
 				self.write("vis p" + str(index*9 + 8) + ",0")
