@@ -50,7 +50,7 @@ GPIO.setup(12, GPIO.OUT) #Buzzer
 GPIO.setup(23, GPIO.OUT) #GREEN led
 GPIO.setup(25, GPIO.OUT) #RED led
 
-RF_PORT = "/dev/ttyUSB0"
+RF_PORT = "/dev/ttyUSB1"
 RF_BAUDRATE = 9600
 
 LCD_PORT = "/dev/ttyAMA0"
@@ -106,23 +106,24 @@ class RF_Process(threading.Thread):
 		while not self.stopper.is_set():
 			logger.info("process time " + str(time.time() - start))
 			start = time.time()
-			check_data = rf_controller.read()
-			for room in room_map:
-				if time.time() - room.last_update >= 7*60:
-					room.temp = -1
-					room.humit = -1
-					room.battery = -1
-					room.last_update = time.time()
-					lcd.update_info(room)
-				if room.pending_cmd == True:
-					if room.retry_count >=2:
-						# cancel
-						room.retry_count = 0
-						room.pending_cmd = False
-					elif time.time() - room.last_send_time >= 10:
-						room.retry_count += 1
-						rf_controller.write_process(room)
-						room.last_send_time = time.time()
+			check_data = rf_controller.write(bytearray([0x01,0x02,0x03,0x04,0x05]))
+			time.sleep(2)
+			#for room in room_map:
+			#	if time.time() - room.last_update >= 7*60:
+			#		room.temp = -1
+			#		room.humit = -1
+			#		room.battery = -1
+			#		room.last_update = time.time()
+			#		lcd.update_info(room)
+			#	if room.pending_cmd == True:
+			#		if room.retry_count >=2:
+			#			# cancel
+			#			room.retry_count = 0
+			#			room.pending_cmd = False
+			#		elif time.time() - room.last_send_time >= 10:
+			#			room.retry_count += 1
+			#			rf_controller.write_process(room)
+			#			room.last_send_time = time.time()
 ###############################################################################		
 class AlarmSystem(threading.Thread):
 	stopper = None
@@ -219,25 +220,26 @@ class RF_Controller:
 			return -1
 		logger.info("receive: " + binascii.hexlify(temp_buff_read))
 		for index in range(2,7):
-			self.buff_read[index] = temp_buff_read[index]
+			self.buff_read[index-2] = temp_buff_read[index]
 		self.process_data(self.buff_read)
 
 	def write(self, data):
 		logger.info("send " + binascii.hexlify(data))
-		if len(data) != 5:
-			return
-		self.ser.write(0x55)
-		time.sleep(0.001)
-		self.ser.write(0xAA)
+		#if len(data) != 5:
+		#	return
+		self.ser.write(bytearray([0x55]))
+		time.sleep(0.005)
+		self.ser.write(bytearray([0xAA]))
 		for index in range(len(data)):
-			time.sleep(0.001)
-			self.ser.write(data[index])
-		time.sleep(0.001)
-		self.ser.write(0xFF)
-		time.sleep(0.001)
-		self.ser.write(0xFF)
-		time.sleep(0.001)
-		self.ser.write(0xFF)
+			time.sleep(0.005)
+			self.ser.write(bytearray([data[index]]))
+		time.sleep(0.005)
+		self.ser.write(bytearray([0xFF]))
+		time.sleep(0.005)
+		self.ser.write(bytearray([0xFF]))
+		time.sleep(0.005)
+		self.ser.write(bytearray([0xFF]))
+		time.sleep(0.005)
 
 	def write_process(self, room):
 		room.pending_cmd = True
