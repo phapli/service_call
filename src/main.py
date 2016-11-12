@@ -106,8 +106,8 @@ class RF_Process(threading.Thread):
 		while not self.stopper.is_set():
 			logger.info("process time " + str(time.time() - start))
 			start = time.time()
-			check_data = rf_controller.write(bytearray([0x01,0x02,0x03,0x04,0x05]))
-			time.sleep(2)
+			check_data = rf_controller.read()
+			
 			#for room in room_map:
 			#	if time.time() - room.last_update >= 7*60:
 			#		room.temp = -1
@@ -194,7 +194,8 @@ class Room:
 ###############################################################################
 class RF_Controller:
 	ser = serial.Serial()
-	buff_read = bytearray([0x00, 0x00, 0x00, 0x00, 0x00])
+	state = -1
+	buff_read = bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
 
 	CMD_UPDATE = 0x01
 	CMD_NEW = 0x02
@@ -213,15 +214,54 @@ class RF_Controller:
 			logger.error("Error when open RF controller on port: " + self.ser.portstr)
 
 
+	# def read(self):
+	# 	temp_buff_read = self.ser.read(11)
+	# 	self.ser.flushInput()
+	# 	if len(temp_buff_read) < 11:
+	# 		return -1
+	# 	logger.info("receive: " + binascii.hexlify(temp_buff_read))
+	# 	for index in range(2,7):
+	# 		self.buff_read[index-2] = temp_buff_read[index]
+	# 	self.process_data(self.buff_read)
+
 	def read(self):
-		temp_buff_read = self.ser.read(10)
+		#logger.info("try read data")
+		global ping_status, last_update
+		temp_buff_read = self.ser.read(11)
 		self.ser.flushInput()
-		if len(temp_buff_read) < 10:
+		if len(temp_buff_read) > 0:
+			logger.info("receive: " + binascii.hexlify(temp_buff_read))
+			for index in range(len(temp_buff_read)):
+				data_process[index] = temp_buff_read[index]
+			return self.queue_data(data_process)
+		else:
 			return -1
-		logger.info("receive: " + binascii.hexlify(temp_buff_read))
-		for index in range(2,7):
-			self.buff_read[index-2] = temp_buff_read[index]
-		self.process_data(self.buff_read)
+
+	def queue_data(self, data_process):
+		for index in range(len(data_process)):
+			if self.state > 0:
+				self.state = self.state + 1
+				self.buff_read[self.state] = data_process[index]
+				if self.state == 9:
+					if data_process[index] != 255:
+						self.state = -1
+				if self.state == 10:
+					self.state = -1
+					if data_process[index] == 255:
+						logger.info("data: " + binascii.hexlify(self.buff_read))
+						#return self.process_data(self.buff_read)
+			else:
+				if self.state == 0:
+					if data_process[index] == 170:
+						self.state = 1
+						self.buff_read[self.state] = data_process[index]
+					else:
+						self.state = -1
+				else:
+					if data_process[index] == 85:
+						self.state = 0
+						self.buff_read[self.state] = data_process[index]
+		return -1
 
 	def write(self, data):
 		logger.info("send " + binascii.hexlify(data))

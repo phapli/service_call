@@ -1,6 +1,7 @@
 import fileinput
 import serial
 import binascii
+import time
 
 RF_PORT = "/dev/ttyUSB0"
 RF_BAUDRATE = 9600
@@ -33,7 +34,9 @@ class RF_Controller:
 
 	def write(self, data):
 		print ("send " + binascii.hexlify(data))
-		self.ser.write(data)
+		for index in range(len(data)):
+			time.sleep(0.03)
+			self.ser.write(bytearray([data[index]]))
 
 	def write_process(self, room):	
 		data = bytearray([self.CMD_PROCESS, room, 0x00, 0x00, 0x00])
@@ -67,8 +70,8 @@ class RF_Controller:
 
 rf_controller = RF_Controller(RF_PORT, RF_BAUDRATE, 0.2)
 
-for line in fileinput.input():
-	print "input: " + line
+while 1:
+	line = "55aa77665544332211ffff"
 	rf_controller.write(binascii.unhexlify(line.strip()))
 	 # if line == "1\n":
 	# 	data = bytearray([0x01, 0x01, 0x15, 0x3d, 0x2f])
@@ -76,4 +79,4 @@ for line in fileinput.input():
 	# elif line == "2\n"
 	# 	data = bytearray([0x01, 0x01, 0x15, 0x3d, 0x2f])
 	# 	rf_controller.write(data)
-	pass
+	time.sleep(2)
