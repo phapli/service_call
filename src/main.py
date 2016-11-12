@@ -297,7 +297,7 @@ class RF_Controller:
 		if data[0] == self.CMD_UPDATE:
 			logger.info("CMD UPDATE")
 			room_id = data[1]
-			if room_id >= 1 or room_id <= 6 
+			if room_id >= 1 or room_id <= 6: 
 				room = room_map[room_id-1]
 				if room:
 					room.temp = data[2]
@@ -310,7 +310,7 @@ class RF_Controller:
 		elif data[0] == self.CMD_NEW:
 			logger.info("CMD NEW")
 			room_id = data[1]
-			if room_id >= 1 or room_id <= 6 
+			if room_id >= 1 or room_id <= 6: 
 				room = room_map[room_id-1]
 				if room:
 					logger.info(room.status)
@@ -331,7 +331,7 @@ class RF_Controller:
 		elif data[0] == self.CMD_DONE:
 			logger.info("CMD DONE")
 			room_id = data[1]
-			if room_id >= 1 or room_id <= 6 
+			if room_id >= 1 or room_id <= 6: 
 				room = room_map[room_id-1]
 				if room:
 					logger.info(room.status)
@@ -350,7 +350,7 @@ class RF_Controller:
 			logger.info("CMD ACK")
 			if data[1] == self.CMD_PROCESS:
 				room_id = data[2]
-				if room_id >= 1 or room_id <= 6 
+				if room_id >= 1 or room_id <= 6: 
 					room = room_map[room_id-1]
 					if room:
 						logger.info(room.status)
@@ -420,7 +420,7 @@ class LCD_Controller:
 				room_id = 6
 			logger.info("room " + str(room_id))
 			if room_id != 0:
-				if room_id >= 1 or room_id <= 6 
+				if room_id >= 1 or room_id <= 6: 
 					room = room_map[room_id-1]
 					if room and room.status == STATUS_NEW:
 						rf_controller.write_process(room)
