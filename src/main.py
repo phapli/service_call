@@ -50,7 +50,7 @@ GPIO.setup(12, GPIO.OUT) #Buzzer
 GPIO.setup(23, GPIO.OUT) #GREEN led
 GPIO.setup(25, GPIO.OUT) #RED led
 
-RF_PORT = "/dev/ttyUSB1"
+RF_PORT = "/dev/ttyUSB0"
 RF_BAUDRATE = 9600
 
 LCD_PORT = "/dev/ttyAMA0"
