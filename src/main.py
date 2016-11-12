@@ -255,67 +255,71 @@ class RF_Controller:
 		if data[0] == self.CMD_UPDATE:
 			logger.info("CMD UPDATE")
 			room_id = data[1]
-			room = room_map[room_id-1]
-			if room:
-				room.temp = data[2]
-				room.humit = data[3]
-				room.battery = data[4]
-				room.last_update = time.time()
-				lcd.update_info(room)
-				self.write_ack(self.CMD_UPDATE,room_id)
-			return 0
-		elif data[0] == self.CMD_NEW:
-			logger.info("CMD NEW")
-			room_id = data[1]
-			room = room_map[room_id-1]
-			if room:
-				logger.info(room.status)
-				if room.status == STATUS_DONE:
-					room.status = STATUS_NEW
+			if room_id >= 1 or room_id <= 6 
+				room = room_map[room_id-1]
+				if room:
 					room.temp = data[2]
 					room.humit = data[3]
 					room.battery = data[4]
 					room.last_update = time.time()
 					lcd.update_info(room)
-					logger.info("change status")
-					lcd.change_status(room)
-				self.write_ack(self.CMD_UPDATE,room_id)
-			return 0
+					self.write_ack(self.CMD_UPDATE,room_id)
+				return 0
+		elif data[0] == self.CMD_NEW:
+			logger.info("CMD NEW")
+			room_id = data[1]
+			if room_id >= 1 or room_id <= 6 
+				room = room_map[room_id-1]
+				if room:
+					logger.info(room.status)
+					if room.status == STATUS_DONE:
+						room.status = STATUS_NEW
+						room.temp = data[2]
+						room.humit = data[3]
+						room.battery = data[4]
+						room.last_update = time.time()
+						lcd.update_info(room)
+						logger.info("change status")
+						lcd.change_status(room)
+					self.write_ack(self.CMD_UPDATE,room_id)
+				return 0
 		elif data[0] == self.CMD_PROCESS:
 			logger.info("CMD PROCESS")
 			return 0
 		elif data[0] == self.CMD_DONE:
 			logger.info("CMD DONE")
 			room_id = data[1]
-			room = room_map[room_id-1]
-			if room:
-				logger.info(room.status)
-				if room.status == STATUS_PROCESS:
-					room.status = STATUS_DONE
-					room.temp = data[2]
-					room.humit = data[3]
-					room.battery = data[4]
-					room.last_update = time.time()
-					lcd.update_info(room)
-					logger.info("change status")
-					lcd.change_status(room)
-				self.write_ack(self.CMD_UPDATE,room_id)
-			return 0
+			if room_id >= 1 or room_id <= 6 
+				room = room_map[room_id-1]
+				if room:
+					logger.info(room.status)
+					if room.status == STATUS_PROCESS:
+						room.status = STATUS_DONE
+						room.temp = data[2]
+						room.humit = data[3]
+						room.battery = data[4]
+						room.last_update = time.time()
+						lcd.update_info(room)
+						logger.info("change status")
+						lcd.change_status(room)
+					self.write_ack(self.CMD_UPDATE,room_id)
+				return 0
 		elif data[0] == self.CMD_ACK:
 			logger.info("CMD ACK")
 			if data[1] == self.CMD_PROCESS:
 				room_id = data[2]
-				room = room_map[room_id-1]
-				if room:
-					logger.info(room.status)
-					room.pending_cmd = False
-					room.last_send_time = time.time()
-					room.retry_count = 0
-					if room.status == STATUS_NEW:
-						room.status = STATUS_PROCESS
-						logger.info("change status")
-						lcd.change_status(room)
-			return 0
+				if room_id >= 1 or room_id <= 6 
+					room = room_map[room_id-1]
+					if room:
+						logger.info(room.status)
+						room.pending_cmd = False
+						room.last_send_time = time.time()
+						room.retry_count = 0
+						if room.status == STATUS_NEW:
+							room.status = STATUS_PROCESS
+							logger.info("change status")
+							lcd.change_status(room)
+				return 0
 
 ###############################################################################
 class LCD_Controller:
@@ -374,9 +378,10 @@ class LCD_Controller:
 				room_id = 6
 			logger.info("room " + str(room_id))
 			if room_id != 0:
-				room = room_map[room_id-1]
-				if room and room.status == STATUS_NEW:
-					rf_controller.write_process(room)
+				if room_id >= 1 or room_id <= 6 
+					room = room_map[room_id-1]
+					if room and room.status == STATUS_NEW:
+						rf_controller.write_process(room)
 	def update_data(self, field, index, data):
 		logger.info("update info room: " + str(index + 1) + " field: " + str(field) + " data: " + str(data))
 		if data > 100:
