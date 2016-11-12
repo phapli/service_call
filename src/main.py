@@ -104,7 +104,7 @@ class RF_Process(threading.Thread):
 	def run(self):
 		start = time.time()
 		while not self.stopper.is_set():
-			logger.info("process time " + str(time.time() - start))
+			# logger.info("process time " + str(time.time() - start))
 			start = time.time()
 			check_data = rf_controller.read()
 			
@@ -197,11 +197,11 @@ class RF_Controller:
 	state = -1
 	buff_read = bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
 
-	CMD_UPDATE = 0x01
-	CMD_NEW = 0x02
-	CMD_PROCESS = 0x03
-	CMD_DONE = 0x04
-	CMD_ACK = 0x05
+	CMD_IDLE = 0x00
+	CMD_REQ_ID = 0x01
+	CMD_REQ_SER = 0x02
+	CMD_REQ_DONE = 0x04
+	CMD_PROCESSING = 0x08
 
 	def __init__(self, port, baudrate, timeout):
 		self.ser.port = port
@@ -231,6 +231,7 @@ class RF_Controller:
 		self.ser.flushInput()
 		if len(temp_buff_read) > 0:
 			logger.info("receive: " + binascii.hexlify(temp_buff_read))
+			data_process = bytearray(len(temp_buff_read))
 			for index in range(len(temp_buff_read)):
 				data_process[index] = temp_buff_read[index]
 			return self.queue_data(data_process)
@@ -249,7 +250,7 @@ class RF_Controller:
 					self.state = -1
 					if data_process[index] == 255:
 						logger.info("data: " + binascii.hexlify(self.buff_read))
-						#return self.process_data(self.buff_read)
+						return self.process_data(self.buff_read)
 			else:
 				if self.state == 0:
 					if data_process[index] == 170:
@@ -265,102 +266,106 @@ class RF_Controller:
 
 	def write(self, data):
 		logger.info("send " + binascii.hexlify(data))
-		#if len(data) != 5:
-		#	return
-		self.ser.write(bytearray([0x55]))
-		time.sleep(0.005)
-		self.ser.write(bytearray([0xAA]))
 		for index in range(len(data)):
-			time.sleep(0.005)
+			time.sleep(0.1)
 			self.ser.write(bytearray([data[index]]))
-		time.sleep(0.005)
-		self.ser.write(bytearray([0xFF]))
-		time.sleep(0.005)
-		self.ser.write(bytearray([0xFF]))
-		time.sleep(0.005)
-		self.ser.write(bytearray([0xFF]))
-		time.sleep(0.005)
 
 	def write_process(self, room):
-		room.pending_cmd = True
-		room.last_send_time = time.time()
-		data = bytearray([self.CMD_PROCESS, room.id, 0x00, 0x00, 0x00])
-		self.write(data)
+		# room.pending_cmd = True
+		# room.last_send_time = time.time()
+		# data = bytearray([self.CMD_REQ_DONE, room.id, 0x00, 0x00, 0x00])
+		# self.write(data)
+		room.status = STATUS_PROCESS
+		lcd.change_status(room)
 
-	def write_ack(self, cmd, room):
-		data = bytearray([self.CMD_ACK, cmd, room, 0x00, 0x00])
+	def write_ack(self, id, room_id, cmd_id, status):
+		logger.info("write ack")
+		data = bytearray([0x55, 0xAA, id, room_id, cmd_id, status, 0x00, 0x00, 0x00, 0xFF, 0xFF])
 		self.write(data)
 
 	def process_data(self, data):
 		global lcd
 		logger.info("process data")
-		if data[0] == self.CMD_UPDATE:
-			logger.info("CMD UPDATE")
-			room_id = data[1]
+		id = data[2]
+		room_id = data[3]
+		cmd_id = data[4]
+		status = data[5]
+		temp = data[6]
+		humit = data[7]
+		batt = data[8]
+		if status == self.CMD_IDLE:
+			logger.info("CMD_IDLE")
 			if room_id >= 1 or room_id <= 6: 
 				room = room_map[room_id-1]
 				if room:
-					room.temp = data[2]
-					room.humit = data[3]
-					room.battery = data[4]
+					room.temp = temp
+					room.humit = humit
+					room.battery = batt
 					room.last_update = time.time()
 					lcd.update_info(room)
-					self.write_ack(self.CMD_UPDATE,room_id)
-				return 0
-		elif data[0] == self.CMD_NEW:
-			logger.info("CMD NEW")
-			room_id = data[1]
-			if room_id >= 1 or room_id <= 6: 
-				room = room_map[room_id-1]
-				if room:
-					logger.info(room.status)
-					if room.status == STATUS_DONE:
-						room.status = STATUS_NEW
-						room.temp = data[2]
-						room.humit = data[3]
-						room.battery = data[4]
-						room.last_update = time.time()
-						lcd.update_info(room)
-						logger.info("change status")
-						lcd.change_status(room)
-					self.write_ack(self.CMD_UPDATE,room_id)
-				return 0
-		elif data[0] == self.CMD_PROCESS:
-			logger.info("CMD PROCESS")
-			return 0
-		elif data[0] == self.CMD_DONE:
-			logger.info("CMD DONE")
-			room_id = data[1]
-			if room_id >= 1 or room_id <= 6: 
-				room = room_map[room_id-1]
-				if room:
-					logger.info(room.status)
-					if room.status == STATUS_PROCESS:
+					logger.info("change status")
+					if room.status != STATUS_DONE:
 						room.status = STATUS_DONE
-						room.temp = data[2]
-						room.humit = data[3]
-						room.battery = data[4]
-						room.last_update = time.time()
-						lcd.update_info(room)
-						logger.info("change status")
 						lcd.change_status(room)
-					self.write_ack(self.CMD_UPDATE,room_id)
+					self.write_ack(id, room_id, cmd_id, status)
 				return 0
-		elif data[0] == self.CMD_ACK:
-			logger.info("CMD ACK")
-			if data[1] == self.CMD_PROCESS:
-				room_id = data[2]
-				if room_id >= 1 or room_id <= 6: 
-					room = room_map[room_id-1]
-					if room:
-						logger.info(room.status)
-						room.pending_cmd = False
-						room.last_send_time = time.time()
-						room.retry_count = 0
-						if room.status == STATUS_NEW:
-							room.status = STATUS_PROCESS
-							logger.info("change status")
-							lcd.change_status(room)
+		elif status == self.CMD_REQ_SER:
+			logger.info("CMD_REQ_SER")
+			if room_id >= 1 or room_id <= 6: 
+				room = room_map[room_id-1]
+				if room:
+					logger.info(room.status)
+					room.status = STATUS_NEW
+					room.temp = temp
+					room.humit = humit
+					room.battery = batt
+					room.last_update = time.time()
+					lcd.update_info(room)
+					logger.info("change status")
+					lcd.change_status(room)
+					self.write_ack(id, room_id, cmd_id, self.CMD_REQ_DONE)
+				return 0
+		elif status == self.CMD_REQ_DONE:
+			logger.info("CMD_REQ_DONE")
+			if room_id >= 1 or room_id <= 6: 
+				room = room_map[room_id-1]
+				if room:
+					logger.info(room.status)
+					room.temp = temp
+					room.humit = humit
+					room.battery = batt
+					room.last_update = time.time()
+					lcd.update_info(room)
+					if room.status == STATUS_NEW:
+						self.write_ack(id, room_id, cmd_id, self.CMD_REQ_DONE)
+					if room.status == STATUS_PROCESS:
+						self.write_ack(id, room_id, cmd_id, self.CMD_PROCESSING)
+				return 0
+		elif status == self.CMD_PROCESSING:
+			logger.info("CMD_PROCESSING")
+			if room_id >= 1 or room_id <= 6: 
+				room = room_map[room_id-1]
+				if room:
+					logger.info(room.status)
+					room.temp = temp
+					room.humit = humit
+					room.battery = batt
+					room.last_update = time.time()
+					lcd.update_info(room)
+					self.write_ack(id, room_id, cmd_id, self.CMD_PROCESSING)
+				return 0
+		elif status == self.CMD_REQ_ID:
+			logger.info("CMD_REQ_ID")
+			if room_id >= 1 or room_id <= 6: 
+				room = room_map[room_id-1]
+				if room:
+					logger.info(room.status)
+					room.temp = temp
+					room.humit = humit
+					room.battery = batt
+					room.last_update = time.time()
+					lcd.update_info(room)
+					self.write_ack(id, room_id, cmd_id, self.CMD_PROCESSING)
 				return 0
 
 ###############################################################################
