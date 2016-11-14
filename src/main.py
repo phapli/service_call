@@ -66,10 +66,7 @@ STATUS_DONE = 0
 STATUS_NEW = 1
 STATUS_PROCESS = 2
 
-req_id_limit = 1
-
 last_update = time.time()
-last_req_id = time.time()
 lcd_state = LCD_STATE_NORMAL
 bell = 0
 
@@ -120,7 +117,7 @@ class RF_Process(threading.Thread):
 			check_data = rf_controller.read()
 			
 			for room in room_map:
-				if time.time() - room.last_update >= 7*60:
+				if time.time() - room.last_update >= 150:
 					temp = -1
 					humit = -1
 					batt = -1
@@ -182,6 +179,7 @@ class Room:
 	pending_cmd = False
 	last_send_time = 0
 	retry_count = 0
+	last_press_lcd = 0
 
 	def __init__(self, room_id):
 		self.room_id = room_id
@@ -193,7 +191,26 @@ class Room:
 		self.pending_cmd = False
 		self.last_send_time = 0
 		self.retry_count = 0
-	
+		self.last_press_lcd = 0
+
+config_file = "/home/pi/service_call/src/config.conf"
+def save_id():
+	target = open(config_file, 'w')
+	target.truncate()
+	for room in room_map:
+		logger.info(room.id)
+		target.write(str(room.id))
+		target.write("\n")
+	target.close()
+
+def load_id():
+	target = open(config_file, 'r')
+	for room in room_map:
+		id = target.readline()
+		if id:
+			logger.info(id)
+			room.id = int(id)
+	target.close()
 ###############################################################################
 class RF_Controller:
 	ser = serial.Serial()
@@ -293,76 +310,89 @@ class RF_Controller:
 		self.write(data)
 
 	def process_data(self, data):
-		global lcd, lcd_state, req_id, req_room_id, req_cmd_id, last_req_id, req_id_limit
-		if lcd_state == LCD_STATE_NORMAL:
-			logger.info("process data")
-			id = data[2]
-			room_id = data[3]
-			cmd_id = data[4]
-			status = data[5]
-			temp = data[6]
-			humit = data[7]
-			batt = data[8]
-			if status == self.CMD_IDLE:
-				logger.info("CMD_IDLE")
-				if room_id >= 1 and room_id <= 6: 
-					room = room_map[room_id-1]
-					if room:
-						lcd.update_info(room, temp, humit, batt)
-						if room.status != STATUS_DONE:
-							logger.info("change status")
-							room.status = STATUS_DONE
-							lcd.change_status(room)
-						self.write_ack(id, room_id, cmd_id, status)
-					return 0
-			elif status == self.CMD_REQ_SER:
-				logger.info("CMD_REQ_SER")
-				if room_id >= 1 and room_id <= 6: 
-					room = room_map[room_id-1]
-					if room:
-						logger.info(room.status)
-						lcd.update_info(room, temp, humit, batt)
-						if room.status != STATUS_NEW:
-							logger.info("change status")
-							room.status = STATUS_NEW
-							lcd.change_status(room)
+		global lcd, lcd_state, req_new_room_id
+		logger.info("process data")
+		id = data[2]
+		room_id = data[3]
+		cmd_id = data[4]
+		status = data[5]
+		temp = data[6]
+		humit = data[7]
+		batt = data[8]
+		if status == self.CMD_IDLE:
+			logger.info("CMD_IDLE")
+			if room_id >= 1 and room_id <= 6: 
+				room = room_map[room_id-1]
+				if room and room.id == id:
+					lcd.update_info(room, temp, humit, batt)
+					if room.status != STATUS_DONE:
+						logger.info("change status")
+						room.status = STATUS_DONE
+						lcd.change_status(room)
+					self.write_ack(id, room_id, cmd_id, status)
+				return 0
+		elif status == self.CMD_REQ_SER:
+			logger.info("CMD_REQ_SER")
+			if room_id >= 1 and room_id <= 6: 
+				room = room_map[room_id-1]
+				if room and room.id == id:
+					logger.info(room.status)
+					lcd.update_info(room, temp, humit, batt)
+					if room.status != STATUS_NEW:
+						logger.info("change status")
+						room.status = STATUS_NEW
+						lcd.change_status(room)
+					self.write_ack(id, room_id, cmd_id, self.CMD_REQ_DONE)
+				return 0
+		elif status == self.CMD_REQ_DONE:
+			logger.info("CMD_REQ_DONE")
+			if room_id >= 1 and room_id <= 6: 
+				room = room_map[room_id-1]
+				if room and room.id == id:
+					logger.info(room.status)
+					lcd.update_info(room, temp, humit, batt)
+					if room.status == STATUS_DONE:
+						logger.info("change status")
+						room.status = STATUS_NEW
+						lcd.change_status(room)
+					if room.status == STATUS_NEW:
 						self.write_ack(id, room_id, cmd_id, self.CMD_REQ_DONE)
-					return 0
-			elif status == self.CMD_REQ_DONE:
-				logger.info("CMD_REQ_DONE")
-				if room_id >= 1 and room_id <= 6: 
-					room = room_map[room_id-1]
-					if room:
-						logger.info(room.status)
-						lcd.update_info(room, temp, humit, batt)
-						if room.status == STATUS_DONE:
-							logger.info("change status")
-							room.status = STATUS_NEW
-							lcd.change_status(room)
-						if room.status == STATUS_NEW:
-							self.write_ack(id, room_id, cmd_id, self.CMD_REQ_DONE)
-						if room.status == STATUS_PROCESS:
-							self.write_ack(id, room_id, cmd_id, self.CMD_PROCESSING)
-					return 0
-			elif status == self.CMD_PROCESSING:
-				logger.info("CMD_PROCESSING")
-				if room_id >= 1 and room_id <= 6: 
-					room = room_map[room_id-1]
-					if room:
-						logger.info(room.status)
-						lcd.update_info(room, temp, humit, batt)
+					if room.status == STATUS_PROCESS:
 						self.write_ack(id, room_id, cmd_id, self.CMD_PROCESSING)
-					return 0
-			elif status == self.CMD_REQ_ID:
-				if time.time() - last_req_id > req_id_limit:
-					req_id_limit = 1
-					last_req_id = time.time() 
-					logger.info("CMD_REQ_ID")
-					req_id = id
-					req_room_id = room_id
-					req_cmd_id = cmd_id
-					lcd.switch(LCD_STATE_CONFIG)
-					return 0
+				return 0
+		elif status == self.CMD_PROCESSING:
+			logger.info("CMD_PROCESSING")
+			if room_id >= 1 and room_id <= 6: 
+				room = room_map[room_id-1]
+				if room:
+					logger.info(room.status)
+					lcd.update_info(room, temp, humit, batt)
+					if room.status != STATUS_PROCESS:
+						logger.info("change status")
+						room.status = STATUS_PROCESS
+						lcd.change_status(room)
+					self.write_ack(id, room_id, cmd_id, self.CMD_PROCESSING)
+				return 0
+		elif status == self.CMD_REQ_ID:
+			logger.info("CMD_REQ_ID")
+			if lcd_state == LCD_STATE_CONFIG:
+				room = room_map[req_new_room_id-1]
+				new_id = random.randint(0,255)
+				while(new_id == room.id):
+					new_id = random.randint(0,255)
+				rf_controller.write_id(id, room_id, cmd_id, rf_controller.CMD_REQ_ID_OK, new_id, req_new_room_id)
+				return 0
+		elif status == self.CMD_REQ_ID_OK:
+			logger.info("CMD_REQ_ID_OK")
+			if lcd_state == LCD_STATE_CONFIG:
+				if room_id >= 1 and room_id <= 6: 
+					room = room_map[room_id-1]
+					room.id = id
+					save_id()
+					lcd.switch(LCD_STATE_NORMAL)
+					for room in room_map:
+						lcd.init_info(room)
+						lcd.change_status(room)
 
 ###############################################################################
 class LCD_Controller:
@@ -412,9 +442,9 @@ class LCD_Controller:
 		self.process_data(self.buff_read)
 
 	def process_data(self, data):
-		global room_map, rf_controller, lcd_state, req_id, req_room_id, req_cmd_id, req_id_limit
+		global room_map, rf_controller, lcd_state, req_new_room_id
 		room_id = 0
-		if data[0] == 0x65 and data[3] == 0x00 and data[4] == 0xff and data[5] == 0xff and data[6] == 0xff:
+		if data[0] == 0x65 and data[4] == 0xff and data[5] == 0xff and data[6] == 0xff:
 			logger.info("button " + str(data[2]))
 			if data[2] == 0x67 or data[2] == 0x0b:
 				room_id = 1
@@ -433,17 +463,22 @@ class LCD_Controller:
 				if room_id >= 1 and room_id <= 6: 
 					room = room_map[room_id-1]
 					if lcd_state == LCD_STATE_CONFIG:
-						new_room_id = room_id
-						new_id = random.randint(0,255)
-						rf_controller.write_id(req_id, req_room_id, req_cmd_id, rf_controller.CMD_REQ_ID_OK, new_id, new_room_id)
-						req_id_limit = 5
 						lcd.switch(LCD_STATE_NORMAL)
 						for room in room_map:
 							lcd.init_info(room)
 							lcd.change_status(room)
 					else:
-						if room and room.status == STATUS_NEW:
-							rf_controller.write_process(room)
+						if data[3] == 0x01:
+							logger.info("press time")
+							room.last_press_lcd = time.time()
+						else:
+							logger.info("press time: " + str(time.time() - room.last_press_lcd))
+							if time.time() - room.last_press_lcd > 5:
+								lcd.switch(LCD_STATE_CONFIG)
+								req_new_room_id = room.room_id
+							else:
+								if room and room.status == STATUS_NEW:
+									rf_controller.write_process(room)
 	def update_data(self, field, index, data):
 		logger.info("update info room: " + str(index + 1) + " field: " + str(field) + " data: " + str(data))
 		if data > 100:
@@ -470,7 +505,7 @@ class LCD_Controller:
 				self.write("vis p" + str(index*9 + 1) + ",0")
 				self.write("vis p" + str(index*9 + 2) + ",1")
 		elif field == self.FIELD_HUMIT:
-			if data > 70 or data < 0:
+			if data > 70 or data <= 0:
 				self.write("vis p" + str(index*9 + 3) + ",1")
 				self.write("vis p" + str(index*9 + 4) + ",0")
 				self.write("vis p" + str(index*9 + 5) + ",0")
@@ -546,6 +581,7 @@ def obj_dict(obj):
 def init_system():
 	global room_map, lcd, breakevent, rf_controller
 	room_map = [Room(1), Room(2), Room(3), Room(4), Room(5), Room(6)]
+	load_id()
 	lcd = LCD_Controller(LCD_PORT, LCD_BAUDRATE, 0.2)
 	lcd.refesh()
 	time.sleep(2)

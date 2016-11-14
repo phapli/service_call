@@ -390,7 +390,7 @@
           easing: 'easeOutBounce',
           lineWidth: '3',
           barColor: function (percent) {
-            return (percent < 35 ? '#5cb85c' : percent < 40 ? '#f0ad4e' : '#cb3935');
+            return ((percent < 30 || percent > 40) ? '#ff0000' : percent > 35 ? '#ffff00' : '#1ABB9C');
           },
           onStep: function(from, to, percent) {
             percent = Math.round(percent);
@@ -406,7 +406,7 @@
           easing: 'easeOutBounce',
           lineWidth: '3',
           barColor: function (percent) {
-            return (percent < 60 ? '#5cb85c' : percent < 70 ? '#f0ad4e' : '#cb3935');
+            return ((percent <= 0 || percent > 70) ? '#ff0000' : percent >= 60 ? '#ffff00' : '#1ABB9C');
           },
           onStep: function(from, to, percent) {
             percent = Math.round(percent);
@@ -422,7 +422,7 @@
           easing: 'easeOutBounce',
           lineWidth: '3',
           barColor: function (percent) {
-            return (percent <= 5 ? '#cb3935' : percent <= 20 ? '#f0ad4e' : '#5cb85c');
+            return ((percent <= 5 || percent > 100) ? '#ff0000' : percent <= 20 ? '#ffff00' : '#1ABB9C');
           },
           onStep: function(from, to, percent) {
             percent = Math.round(percent);
@@ -441,19 +441,19 @@
               console.log(data);
               var room_map = JSON.parse(data);
               room_map.forEach(function(room) {
-                  console.log(room.id);
-                  var chart_temp = window.chart = $('#chart' + room.id + '1').data('easyPieChart');
+                  console.log(room.room_id);
+                  var chart_temp = window.chart = $('#chart' + room.room_id + '1').data('easyPieChart');
                   chart_temp.update(room.temp);
-                  var chart_humit = window.chart = $('#chart' + room.id + '2').data('easyPieChart');
+                  var chart_humit = window.chart = $('#chart' + room.room_id + '2').data('easyPieChart');
                   chart_humit.update(room.humit);
-                  var chart_batt = window.chart = $('#chart' + room.id + '3').data('easyPieChart');
+                  var chart_batt = window.chart = $('#chart' + room.room_id + '3').data('easyPieChart');
                   chart_batt.update(room.battery);
                   if(room.status == 0){
-                    $('#status' + room.id).removeClass('red').removeClass('yellow').addClass('green');
+                    $('#status' + room.room_id).removeClass('red').removeClass('yellow').addClass('green');
                   } else if (room.status == 1){
-                    $('#status' + room.id).removeClass('green').removeClass('yellow').addClass('red');
+                    $('#status' + room.room_id).removeClass('green').removeClass('yellow').addClass('red');
                   } else if (room.status == 2){
-                    $('#status' + room.id).removeClass('red').removeClass('green').addClass('yellow');
+                    $('#status' + room.room_id).removeClass('red').removeClass('green').addClass('yellow');
                   }
                   
               });
