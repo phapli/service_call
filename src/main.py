@@ -66,7 +66,10 @@ STATUS_DONE = 0
 STATUS_NEW = 1
 STATUS_PROCESS = 2
 
+req_id_limit = 1
+
 last_update = time.time()
+last_req_id = time.time()
 lcd_state = LCD_STATE_NORMAL
 bell = 0
 
@@ -290,7 +293,7 @@ class RF_Controller:
 		self.write(data)
 
 	def process_data(self, data):
-		global lcd, lcd_state, req_id, req_room_id, req_cmd_id
+		global lcd, lcd_state, req_id, req_room_id, req_cmd_id, last_req_id, req_id_limit
 		if lcd_state == LCD_STATE_NORMAL:
 			logger.info("process data")
 			id = data[2]
@@ -351,12 +354,15 @@ class RF_Controller:
 						self.write_ack(id, room_id, cmd_id, self.CMD_PROCESSING)
 					return 0
 			elif status == self.CMD_REQ_ID:
-				logger.info("CMD_REQ_ID")
-				req_id = id
-				req_room_id = room_id
-				req_cmd_id = cmd_id
-				lcd.switch(LCD_STATE_CONFIG)
-				return 0
+				if time.time() - last_req_id > req_id_limit:
+					req_id_limit = 1
+					last_req_id = time.time() 
+					logger.info("CMD_REQ_ID")
+					req_id = id
+					req_room_id = room_id
+					req_cmd_id = cmd_id
+					lcd.switch(LCD_STATE_CONFIG)
+					return 0
 
 ###############################################################################
 class LCD_Controller:
@@ -379,15 +385,15 @@ class LCD_Controller:
 			logger.error("Error when open LCD controller on port: " + self.ser.portstr)
 
 	def refesh(self):
-		self.write("page 1")
+		self.write("page page1")
 
 	def switch(self, state):
 		global lcd_state
 		if lcd_state != state:
 			if state == LCD_STATE_NORMAL:
-				self.write("page 0")
+				self.write("page page0")
 			else:
-				self.write("page 4")
+				self.write("page page4")
 		lcd_state = state
 
 	def write(self, cmd):
@@ -406,7 +412,7 @@ class LCD_Controller:
 		self.process_data(self.buff_read)
 
 	def process_data(self, data):
-		global room_map, rf_controller, lcd_state, req_id, req_room_id, req_cmd_id
+		global room_map, rf_controller, lcd_state, req_id, req_room_id, req_cmd_id, req_id_limit
 		room_id = 0
 		if data[0] == 0x65 and data[3] == 0x00 and data[4] == 0xff and data[5] == 0xff and data[6] == 0xff:
 			logger.info("button " + str(data[2]))
@@ -429,8 +435,12 @@ class LCD_Controller:
 					if lcd_state == LCD_STATE_CONFIG:
 						new_room_id = room_id
 						new_id = random.randint(0,255)
-						self.write_id(id, room_id, cmd_id, self.CMD_REQ_ID_OK, new_id, new_room_id)
+						rf_controller.write_id(req_id, req_room_id, req_cmd_id, rf_controller.CMD_REQ_ID_OK, new_id, new_room_id)
+						req_id_limit = 5
 						lcd.switch(LCD_STATE_NORMAL)
+						for room in room_map:
+							lcd.init_info(room)
+							lcd.change_status(room)
 					else:
 						if room and room.status == STATUS_NEW:
 							rf_controller.write_process(room)
@@ -460,7 +470,7 @@ class LCD_Controller:
 				self.write("vis p" + str(index*9 + 1) + ",0")
 				self.write("vis p" + str(index*9 + 2) + ",1")
 		elif field == self.FIELD_HUMIT:
-			if data > 70 and data < 0:
+			if data > 70 or data < 0:
 				self.write("vis p" + str(index*9 + 3) + ",1")
 				self.write("vis p" + str(index*9 + 4) + ",0")
 				self.write("vis p" + str(index*9 + 5) + ",0")
@@ -538,6 +548,7 @@ def init_system():
 	room_map = [Room(1), Room(2), Room(3), Room(4), Room(5), Room(6)]
 	lcd = LCD_Controller(LCD_PORT, LCD_BAUDRATE, 0.2)
 	lcd.refesh()
+	time.sleep(2)
 	rf_controller = RF_Controller(RF_PORT, RF_BAUDRATE, 0.2)
 
 	alarm_system = AlarmSystem(breakevent)
