@@ -6,7 +6,7 @@ import signal
 import serial
 import time
 import threading
-from iteadsdk import *
+# from iteadsdk import *
 from threading import Timer
 from time import localtime, strftime
 import RPi.GPIO as GPIO
@@ -235,15 +235,18 @@ class RF_Controller:
 			logger.error("Error when open RF controller on port: " + self.ser.portstr)
 
 
-	# def read(self):
-	# 	temp_buff_read = self.ser.read(11)
-	# 	self.ser.flushInput()
-	# 	if len(temp_buff_read) < 11:
-	# 		return -1
-	# 	logger.info("receive: " + binascii.hexlify(temp_buff_read))
-	# 	for index in range(2,7):
-	# 		self.buff_read[index-2] = temp_buff_read[index]
-	# 	self.process_data(self.buff_read)
+	def checksum(self, data):
+		sum = 0
+		for index in range(2,8):
+			sum = sum + data[index]
+		logger.info("sum " + str(sum))
+		sum = sum % 255
+		logger.info("sum " + str(sum))
+		logger.info("checksum " + str(data[9]))
+		if sum == data[9]:
+			return True
+		else:
+			return True
 
 	def read(self):
 		#logger.info("try read data")
@@ -271,7 +274,8 @@ class RF_Controller:
 					self.state = -1
 					if data_process[index] == 255:
 						logger.info("data: " + binascii.hexlify(self.buff_read))
-						return self.process_data(self.buff_read)
+						if self.checksum(self.buff_read):
+							return self.process_data(self.buff_read)
 			else:
 				if self.state == 0:
 					if data_process[index] == 170:
