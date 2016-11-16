@@ -240,14 +240,18 @@ class RF_Controller:
 		else:
 			logger.error("Error when open RF controller on port: " + self.ser.portstr)
 
-
-	def checksum(self, data):
+	def cal_checksum(self, data):
 		sum = 0
-		for index in range(2,8):
+		for index in range(2,9):
+			logger.info("index " + str(index) + " value " + str(data[index]))
 			sum = sum + data[index]
 		logger.info("sum " + str(sum))
-		sum = sum % 255
+		sum = sum % 256
 		logger.info("sum " + str(sum))
+		return sum	
+
+	def checksum(self, data):
+		sum = self.cal_checksum(data)
 		logger.info("checksum " + str(data[9]))
 		if sum == data[9]:
 			return True
@@ -273,9 +277,6 @@ class RF_Controller:
 			if self.state > 0:
 				self.state = self.state + 1
 				self.buff_read[self.state] = data_process[index]
-				if self.state == 9:
-					if data_process[index] != 255:
-						self.state = -1
 				if self.state == 10:
 					self.state = -1
 					if data_process[index] == 255:
@@ -296,6 +297,8 @@ class RF_Controller:
 		return -1
 
 	def write(self, data):
+		sum = self.cal_checksum(data)
+		data[9] = sum
 		logger.info("send " + binascii.hexlify(data))
 		for index in range(len(data)):
 			#time.sleep(0.004)
