@@ -489,6 +489,7 @@ class LCD_Controller:
 							if time.time() - room.last_press_lcd > 5:
 								lcd.switch(LCD_STATE_CONFIG)
 								req_new_room_id = room.room_id
+								room.last_press_lcd = 0
 							else:
 								if room and room.status == STATUS_NEW:
 									rf_controller.write_process(room)
