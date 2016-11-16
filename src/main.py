@@ -119,7 +119,7 @@ class RF_Process(threading.Thread):
 			
 			for room in room_map:
 				if lcd_state == LCD_STATE_NORMAL:
-					if time.time() - room.last_update >= 150
+					if time.time() - room.last_update >= 150:
 						temp = -1
 						humit = -1
 						batt = -1
