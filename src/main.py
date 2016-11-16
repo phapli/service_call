@@ -124,10 +124,10 @@ class RF_Process(threading.Thread):
 						humit = -1
 						batt = -1
 						lcd.update_info(room, temp, humit, batt)
-					if room.last_press_lcd > 0 and time.time() - room.last_press_lcd > 5:
-						lcd.switch(LCD_STATE_CONFIG)
-						req_new_room_id = room.room_id
-						room.last_press_lcd = 0
+					# if room.last_press_lcd > 0 and time.time() - room.last_press_lcd > 5:
+					# 	lcd.switch(LCD_STATE_CONFIG)
+					# 	req_new_room_id = room.room_id
+					# 	room.last_press_lcd = 0
 			
 ###############################################################################		
 class AlarmSystem(threading.Thread):
@@ -476,7 +476,7 @@ class LCD_Controller:
 				if room_id >= 1 and room_id <= 6: 
 					room = room_map[room_id-1]
 					if lcd_state == LCD_STATE_CONFIG:
-						room.last_press_lcd = 0
+						# room.last_press_lcd = 0
 						lcd.switch(LCD_STATE_NORMAL)
 						for room in room_map:
 							lcd.init_info(room)
@@ -486,7 +486,7 @@ class LCD_Controller:
 							logger.info("press time")
 							room.last_press_lcd = time.time()
 						else:
-							room.last_press_lcd = 0
+							# room.last_press_lcd = 0
 							logger.info("press time: " + str(time.time() - room.last_press_lcd))
 							if time.time() - room.last_press_lcd > 5:
 								lcd.switch(LCD_STATE_CONFIG)
