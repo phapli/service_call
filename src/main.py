@@ -107,7 +107,7 @@ class RF_Process(threading.Thread):
 		self.stopper = stopper
 		self.rf = rf
 	def run(self):
-		global lcd_state, 
+		global lcd_state
 		start = time.time()
 		for room in room_map:
 			lcd.init_info(room)
