@@ -124,6 +124,8 @@ class RF_Process(threading.Thread):
 						humit = -1
 						batt = -1
 						lcd.update_info(room, temp, humit, batt)
+						room.status = STATUS_DONE
+						lcd.change_status(room)
 					if room.last_press_lcd > 0 and time.time() - room.last_press_lcd > 5:
 						lcd.switch(LCD_STATE_CONFIG)
 						req_new_room_id = room.room_id
@@ -494,7 +496,7 @@ class LCD_Controller:
 								if room and room.status == STATUS_NEW:
 									rf_controller.write_process(room)
 							room.last_press_lcd = 0
-							
+
 	def update_data(self, field, index, data):
 		logger.info("update info room: " + str(index + 1) + " field: " + str(field) + " data: " + str(data))
 		if data > 100:
