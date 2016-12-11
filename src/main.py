@@ -266,7 +266,7 @@ class RF_Controller:
 		temp_buff_read = self.ser.read(11)
 		self.ser.flushInput()
 		if len(temp_buff_read) > 0:
-			logger.info("receive: " + binascii.hexlify(temp_buff_read))
+			logger.info("	: " + binascii.hexlify(temp_buff_read))
 			data_process = bytearray(len(temp_buff_read))
 			for index in range(len(temp_buff_read)):
 				data_process[index] = temp_buff_read[index]
@@ -461,17 +461,17 @@ class LCD_Controller:
 		room_id = 0
 		if data[0] == 0x65 and data[4] == 0xff and data[5] == 0xff and data[6] == 0xff:
 			logger.info("button " + str(data[2]))
-			if data[2] == 0x67 or data[2] == 0x0b:
+			if data[2] == 0x6d or data[2] == 0x0b:
 				room_id = 1
-			elif data[2] == 0x68 or data[2] == 0x0c:
+			elif data[2] == 0x6e or data[2] == 0x0c:
 				room_id = 2
-			elif data[2] == 0x69 or data[2] == 0x0d:
+			elif data[2] == 0x6f or data[2] == 0x0d:
 				room_id = 3
-			elif data[2] == 0x6a or data[2] == 0x0e:
+			elif data[2] == 0x70 or data[2] == 0x0e:
 				room_id = 4
-			elif data[2] == 0x6b or data[2] == 0x0f:
+			elif data[2] == 0x71 or data[2] == 0x0f:
 				room_id = 5
-			elif data[2] == 0x6c or data[2] == 0x10:
+			elif data[2] == 0x72 or data[2] == 0x10:
 				room_id = 6
 			logger.info("room " + str(room_id))
 			if room_id != 0:
