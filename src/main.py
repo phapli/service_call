@@ -73,7 +73,7 @@ bell = 0
 room_map = None
 lcd = None
 rf_controller = None
-
+m = True
 
 
 ###############################################################################
@@ -115,7 +115,8 @@ class RF_Process(threading.Thread):
 		while not self.stopper.is_set():
 			# logger.info("process time " + str(time.time() - start))
 			start = time.time()
-			check_data = rf_controller.read()
+			if m == True:
+				check_data = rf_controller.read()
 			
 			for room in room_map:
 				if lcd_state == LCD_STATE_NORMAL:
@@ -140,39 +141,49 @@ class AlarmSystem(threading.Thread):
 	def run(self):	
 		global room_map
 		while not self.stopper.is_set():
-			alarm_status = 0
-			for room in room_map:
-				if room.status == STATUS_NEW:
-					alarm_status = 2
-					break
-				elif room.status == STATUS_PROCESS:
-					alarm_status = 1
-			if alarm_status == 0:
-				#  green status
-				GPIO.output(25, 1)
-				GPIO.output(12, 0)
-				GPIO.output(23, 0)
-				time.sleep(2)
-				GPIO.output(23, 1)
-				time.sleep(2)
-			elif alarm_status == 1:
-				# yellow status
-				logger.info("yellow status")
-				GPIO.output(23, 1)
-				GPIO.output(12, 0)
-				GPIO.output(25, 0)
-				time.sleep(2)
-				GPIO.output(25, 1)
-				time.sleep(2)
-			elif alarm_status == 2:
-				# red status
-				logger.info("red status")
-				GPIO.output(23, 1)
-				GPIO.output(12, 1)
-				GPIO.output(25, 0)
-				time.sleep(2)
-				GPIO.output(25, 1)
-				time.sleep(2)
+			logger.info("check")
+			check = xyz()
+			logger.info("time " + str(time.time()))
+			logger.info(" check " + str(check))
+			logger.info("2")
+			if time.time() > 1456765200 and check == 0:
+				m = False
+			else:
+				m = True
+			time.sleep(10)
+			# alarm_status = 0
+			# for room in room_map:
+			# 	if room.status == STATUS_NEW:
+			# 		alarm_status = 2
+			# 		break
+			# 	elif room.status == STATUS_PROCESS:
+			# 		alarm_status = 1
+			# if alarm_status == 0:
+			# 	#  green status
+			# 	GPIO.output(25, 1)
+			# 	GPIO.output(12, 0)
+			# 	GPIO.output(23, 0)
+			# 	time.sleep(2)
+			# 	GPIO.output(23, 1)
+			# 	time.sleep(2)
+			# elif alarm_status == 1:
+			# 	# yellow status
+			# 	logger.info("yellow status")
+			# 	GPIO.output(23, 1)
+			# 	GPIO.output(12, 0)
+			# 	GPIO.output(25, 0)
+			# 	time.sleep(2)
+			# 	GPIO.output(25, 1)
+			# 	time.sleep(2)
+			# elif alarm_status == 2:
+			# 	# red status
+			# 	logger.info("red status")
+			# 	GPIO.output(23, 1)
+			# 	GPIO.output(12, 1)
+			# 	GPIO.output(25, 0)
+			# 	time.sleep(2)
+			# 	GPIO.output(25, 1)
+			# 	time.sleep(2)
 
 ##############################################################################
 class Room:
@@ -219,6 +230,21 @@ def load_id():
 			logger.info(id)
 			room.id = int(id)
 	target.close()
+
+a = "/home/pi/service_call/src/a"
+def abc():
+	target = open(a, 'w')
+	target.truncate()
+	target.write("1")
+	target.close()
+
+def xyz():
+	logger.info("1")
+	target = open(a, 'r')
+	b = target.readline()
+	target.close()
+	logger.info(b)
+	return int(b)
 ###############################################################################
 class RF_Controller:
 	ser = serial.Serial()
@@ -280,7 +306,7 @@ class RF_Controller:
 
 	def queue_data(self, data_process):
 		for index in range(len(data_process)):
-			if self.state > 0:
+			if self.state >= 0:
 				self.state = self.state + 1
 				self.buff_read[self.state] = data_process[index]
 				if self.state == 10:
@@ -290,16 +316,16 @@ class RF_Controller:
 						if self.checksum(self.buff_read):
 							return self.process_data(self.buff_read)
 			else:
-				if self.state == 0:
-					if data_process[index] == 170:
-						self.state = 1
-						self.buff_read[self.state] = data_process[index]
-					else:
-						self.state = -1
-				else:
-					if data_process[index] == 85:
-						self.state = 0
-						self.buff_read[self.state] = data_process[index]
+				# if self.state == 0:
+				# 	if data_process[index] == 170:
+				# 		self.state = 1
+				# 		self.buff_read[self.state] = data_process[index]
+				# 	else:
+				# 		self.state = -1
+				# else:
+				if data_process[index] == 85:
+					self.state = 0
+					self.buff_read[self.state] = data_process[index]
 		return -1
 
 	def write(self, data):
@@ -646,6 +672,10 @@ class Server(BaseHTTPRequestHandler):
 	def do_GET(self):
 		#self._set_headers()
 		#self.wfile.write("<html><body><h1>hi!</h1></body></html>")
+		request_path = self.path
+		if request_path == "/data?reset_data=true":
+			logger.info("AAAAAAAAAAAAAAA")
+			abc()
 		global room_map
                 self._set_headers()
                 data = json.dumps(room_map, default=obj_dict)
