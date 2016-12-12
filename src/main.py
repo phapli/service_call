@@ -107,7 +107,7 @@ class RF_Process(threading.Thread):
 		self.stopper = stopper
 		self.rf = rf
 	def run(self):
-		global lcd_state, req_new_room_id
+		global lcd_state, req_new_room_id, m
 		start = time.time()
 		for room in room_map:
 			lcd.init_info(room)
@@ -139,14 +139,12 @@ class AlarmSystem(threading.Thread):
 		super(AlarmSystem, self).__init__()
 		self.stopper = stopper
 	def run(self):	
-		global room_map
+		global room_map, m
 		while not self.stopper.is_set():
-			logger.info("check")
 			check = xyz()
 			logger.info("time " + str(time.time()))
 			logger.info(" check " + str(check))
-			logger.info("2")
-			if time.time() > 1456765200 and check == 0:
+			if time.time() > 1489424400 and check == 0:
 				m = False
 			else:
 				m = True
@@ -235,11 +233,10 @@ a = "/home/pi/service_call/src/a"
 def abc():
 	target = open(a, 'w')
 	target.truncate()
-	target.write("1")
+	target.write("1"	)
 	target.close()
 
 def xyz():
-	logger.info("1")
 	target = open(a, 'r')
 	b = target.readline()
 	target.close()
