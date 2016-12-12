@@ -504,9 +504,13 @@ class LCD_Controller:
 		self.update_icon(field, index, data)
 		if data > 0:
 			senddata =  "t" + str(index*3 + field) + ".txt=\"" + str(data) + "\""
+			self.write(senddata)
+			self.write("vis t" + str(index + 30) + ",0")
 		else:
 			senddata =  "t" + str(index*3 + field) + ".txt=\"-\""
-		self.write(senddata)
+			self.write(senddata)
+			self.write("vis t" + str(index + 30) + ",1")
+		
 
 	def update_icon(self, field, index, data):
 		if field == self.FIELD_TEMP:
@@ -588,7 +592,7 @@ class LCD_Controller:
 			self.write("vis n" + str((room.room_id - 1)*3) + ",0")
 			self.write("vis n" + str((room.room_id - 1)*3 + 1) + ",0")
 			self.write("vis n" + str((room.room_id - 1)*3 + 2) + ",1")
-
+				
 
 	def end_cmd(self):
 		self.ser.write(bytearray([0xFF, 0xFF, 0xFF]))	

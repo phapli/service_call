@@ -49,7 +49,12 @@
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
                   <h2><b>Room 1</b></h2>
-                  <ul class="nav navbar-right panel_toolbox">
+                  <ul id="nodata1" style="display: none;" class="nav navbar-right panel_toolbox">
+                    <li>
+                      <h1>NO DATA</h1>
+                    </li>
+                  </ul>
+                  <ul id="data1" style="display: none;" class="nav navbar-right panel_toolbox">
                     <li>
                       <i id="status1" class="fa fa-circle green fa-4x"></i>
                     </li>
@@ -74,7 +79,6 @@
                       </span>
                     </div>
                   </div>
-
                   <div class="row">
                     <div class="col-xs-4">
                       <span align="center">
@@ -100,7 +104,12 @@
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
                   <h2><b>Room 2</b></h2>
-                  <ul class="nav navbar-right panel_toolbox">
+                  <ul id="nodata2" style="display: none;" class="nav navbar-right panel_toolbox">
+                    <li>
+                      <h1>NO DATA</h1>
+                    </li>
+                  </ul>
+                  <ul id="data2" style="display: none;" class="nav navbar-right panel_toolbox">
                     <li>
                       <i id="status2" class="fa fa-circle green fa-4x"></i>
                     </li>
@@ -151,7 +160,12 @@
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
                   <h2><b>Room 3</b></h2>
-                  <ul class="nav navbar-right panel_toolbox">
+                  <ul id="nodata3" style="display: none;" class="nav navbar-right panel_toolbox">
+                    <li>
+                      <h1>NO DATA</h1>
+                    </li>
+                  </ul>
+                  <ul id="data3" style="display: none;" class="nav navbar-right panel_toolbox">
                     <li>
                       <i id="status3" class="fa fa-circle green fa-4x"></i>
                     </li>
@@ -205,7 +219,12 @@
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
                   <h2><b>Room 4</b></h2>
-                  <ul class="nav navbar-right panel_toolbox">
+                  <ul id="nodata4" class="nav navbar-right panel_toolbox">
+                    <li>
+                      <h1>NO DATA</h1>
+                    </li>
+                  </ul>
+                  <ul id="data4" class="nav navbar-right panel_toolbox">
                     <li>
                       <i id="status4" class="fa fa-circle green fa-4x"></i>
                     </li>
@@ -256,7 +275,12 @@
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
                   <h2><b>Room 5</b></h2>
-                  <ul class="nav navbar-right panel_toolbox">
+                  <ul id="nodata5" class="nav navbar-right panel_toolbox">
+                    <li>
+                      <h1>NO DATA</h1>
+                    </li>
+                  </ul>
+                  <ul id="data5" class="nav navbar-right panel_toolbox">
                     <li>
                       <i id="status5" class="fa fa-circle green fa-4x"></i>
                     </li>
@@ -307,7 +331,12 @@
               <div class="x_panel tile fixed_height_320 overflow_hidden">
                 <div class="x_title">
                   <h2><b>Room 6</b></h2>
-                  <ul class="nav navbar-right panel_toolbox">
+                  <ul id="nodata6" class="nav navbar-right panel_toolbox">
+                    <li>
+                      <h1>NO DATA</h1>
+                    </li>
+                  </ul>
+                  <ul id="data6" class="nav navbar-right panel_toolbox">
                     <li>
                       <i id="status6" class="fa fa-circle green fa-4x"></i>
                     </li>
@@ -455,7 +484,13 @@
                   } else if (room.status == 2){
                     $('#status' + room.room_id).removeClass('red').removeClass('green').addClass('yellow');
                   }
-                  
+                  if(room.battery < 0 && room.humit < 0 && room.temp < 0){
+                    $('#data' + room.room_id).hide();
+                    $('#nodata' + room.room_id).show();
+                  } else {
+                    $('#data' + room.room_id).show();
+                    $('#nodata' + room.room_id).hide();
+                  }
               });
             },
             complete: function() {
