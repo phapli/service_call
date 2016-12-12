@@ -1,0 +1,1 @@
+sudo python /home/pi/service_call/src/ip_mail.py

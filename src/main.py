@@ -232,6 +232,10 @@ class RF_Controller:
 	CMD_PROCESSING = 0x08
 	CMD_REQ_ID_OK = 0x10
 
+	FLASH_PRO_ERR = 0x81
+	AM2302_RD_ERR = 0x82
+	CLIENT_CHANGE_ID = 0x84
+
 	def __init__(self, port, baudrate, timeout):
 		self.ser.port = port
 		self.ser.baudrate = baudrate
@@ -245,16 +249,16 @@ class RF_Controller:
 	def cal_checksum(self, data):
 		sum = 0
 		for index in range(2,9):
-			logger.info("index " + str(index) + " value " + str(data[index]))
+			# logger.info("index " + str(index) + " value " + str(data[index]))
 			sum = sum + data[index]
-		logger.info("sum " + str(sum))
+		# logger.info("sum " + str(sum))
 		sum = sum % 256
-		logger.info("sum " + str(sum))
+		# logger.info("sum " + str(sum))
 		return sum	
 
 	def checksum(self, data):
 		sum = self.cal_checksum(data)
-		logger.info("checksum " + str(data[9]))
+		# logger.info("checksum " + str(data[9]))
 		if sum == data[9]:
 			return True
 		else:
@@ -266,7 +270,7 @@ class RF_Controller:
 		temp_buff_read = self.ser.read(11)
 		self.ser.flushInput()
 		if len(temp_buff_read) > 0:
-			logger.info("	: " + binascii.hexlify(temp_buff_read))
+			logger.info("===============================\t" + binascii.hexlify(temp_buff_read))
 			data_process = bytearray(len(temp_buff_read))
 			for index in range(len(temp_buff_read)):
 				data_process[index] = temp_buff_read[index]
@@ -380,7 +384,7 @@ class RF_Controller:
 			if room_id >= 1 and room_id <= 6: 
 				room = room_map[room_id-1]
 				if room:
-					logger.info(room.status)
+					# logger.info(room.status)
 					lcd.update_info(room, temp, humit, batt)
 					if room.status != STATUS_PROCESS:
 						logger.info("change status")
@@ -408,6 +412,15 @@ class RF_Controller:
 					for room in room_map:
 						lcd.init_info(room)
 						lcd.change_status(room)
+		elif status == self.FLASH_PRO_ERR:
+			logger.error("FLASH_PRO_ERR " + binascii.hexlify(data))
+			self.write_ack(id, room_id, cmd_id, status)
+		elif status == self.AM2302_RD_ERR:
+			logger.error("AM2302_RD_ERR " + binascii.hexlify(data))
+			self.write_ack(id, room_id, cmd_id, status)
+		elif status == self.CLIENT_CHANGE_ID:
+			logger.error("CLIENT_CHANGE_ID " + binascii.hexlify(data))
+			self.write_ack(id, room_id, cmd_id, status)
 
 ###############################################################################
 class LCD_Controller:
