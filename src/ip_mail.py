@@ -39,7 +39,7 @@ initialize_logger("/var/log/service_call")
 
 # Change to your own account information
 to = 'phapli1991@gmail.com'
-to1 = 'ngocumanh@gmail.com'
+to1 = 'service.calling.system@gmail.com'
 gmail_user = 'service.calling.system@gmail.com'
 gmail_password = 'giaothoa1234'
 

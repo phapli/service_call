@@ -17,6 +17,11 @@ from logging.handlers import RotatingFileHandler
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import json
 import random
+import subprocess
+import smtplib
+import socket
+from email.mime.text import MIMEText
+import datetime
 
 logger = logging.getLogger(__name__)
 def initialize_logger(output_dir):
@@ -438,12 +443,15 @@ class RF_Controller:
 		elif status == self.FLASH_PRO_ERR:
 			logger.error("FLASH_PRO_ERR " + binascii.hexlify(data))
 			self.write_ack(id, room_id, cmd_id, status)
+			send_mail("FLASH_PRO_ERR " + binascii.hexlify(data))
 		elif status == self.AM2302_RD_ERR:
 			logger.error("AM2302_RD_ERR " + binascii.hexlify(data))
 			self.write_ack(id, room_id, cmd_id, status)
+			send_mail("AM2302_RD_ERR " + binascii.hexlify(data))
 		elif status == self.CLIENT_CHANGE_ID:
 			logger.error("CLIENT_CHANGE_ID " + binascii.hexlify(data))
 			self.write_ack(id, room_id, cmd_id, status)
+			send_mail("CLIENT_CHANGE_ID " + binascii.hexlify(data))
 
 ###############################################################################
 class LCD_Controller:
@@ -696,6 +704,34 @@ def main(server_class=HTTPServer, handler_class=Server, port=80):
 	httpd = server_class(server_address, handler_class)
 	logger.info("Calling Service Start ...")
 	httpd.serve_forever()
+###############################################################################
+to = 'service.calling.system@gmail.com'
+gmail_user = 'service.calling.system@gmail.com'
+gmail_password = 'giaothoa1234'
+def send_mail(msg):
+    try:
+        smtpserver = smtplib.SMTP('smtp.gmail.com', 587, timeout=30)
+        smtpserver.ehlo()
+        smtpserver.starttls()
+        smtpserver.ehlo
+        smtpserver.login(gmail_user, gmail_password)
+        today = datetime.date.today()
+        # Very Linux Specific
+        arg='ip route list'
+        p=subprocess.Popen(arg,shell=True,stdout=subprocess.PIPE)
+        data = p.communicate()
+        split_data = data[0].split()
+        ipaddr = split_data[split_data.index('src')+1]
+        my_ip = 'Service Calling System Error: %s' %  msg
+        logger.info(my_ip)
+        msg = MIMEText(my_ip)
+        msg['Subject'] = 'Service Calling System Error'
+        msg['From'] = gmail_user
+        msg['To'] = to
+        smtpserver.sendmail(gmail_user, [to], msg.as_string())
+        smtpserver.quit()
+    except Exception as e:
+        logger.error("ERROR to send mail")
 ###############################################################################
 # Run
 ###############################################################################
