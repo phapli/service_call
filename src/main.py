@@ -276,7 +276,7 @@ class RF_Controller:
 
 	def cal_checksum(self, data):
 		sum = 0
-		for index in range(2,9):
+		for index in range(1,9):
 			# logger.info("index " + str(index) + " value " + str(data[index]))
 			sum = sum + data[index]
 		# logger.info("sum " + str(sum))
@@ -346,19 +346,20 @@ class RF_Controller:
 		room.status = STATUS_PROCESS
 		lcd.change_status(room)
 
-	def write_ack(self, id, room_id, cmd_id, status):
+	def write_ack(self, mac_id, id, room_id, cmd_id, status):
 		logger.info("write ack")
-		data = bytearray([0x55, 0xAA, id, room_id, cmd_id, status, 0x00, 0x00, 0x00, 0xFF, 0xFF])
+		data = bytearray([0x55, mac_id, id, room_id, cmd_id, status, 0x00, 0x00, 0x00, 0xFF, 0xFF])
 		self.write(data)
 
-	def write_id(self, id, room_id, cmd_id, status, new_id, new_room_id):
+	def write_id(self, id, mac_id, room_id, cmd_id, status, new_id, new_room_id):
 		logger.info("write ack")
-		data = bytearray([0x55, 0xAA, id, room_id, cmd_id, status, new_id, new_room_id, 0x00, 0xFF, 0xFF])
+		data = bytearray([0x55, mac_id, id, room_id, cmd_id, status, new_id, new_room_id, 0x00, 0xFF, 0xFF])
 		self.write(data)
 
 	def process_data(self, data):
 		global lcd, lcd_state, req_new_room_id
 		logger.info("process data")
+		mac_id = data[1]
 		id = data[2]
 		room_id = data[3]
 		cmd_id = data[4]
@@ -376,7 +377,7 @@ class RF_Controller:
 						logger.info("change status")
 						room.status = STATUS_DONE
 						lcd.change_status(room)
-					self.write_ack(id, room_id, cmd_id, status)
+					self.write_ack(mac_id, id, room_id, cmd_id, status)
 				return 0
 		elif status == self.CMD_REQ_SER:
 			logger.info("CMD_REQ_SER")
@@ -389,7 +390,7 @@ class RF_Controller:
 						logger.info("change status")
 						room.status = STATUS_NEW
 						lcd.change_status(room)
-					self.write_ack(id, room_id, cmd_id, self.CMD_REQ_DONE)
+					self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_REQ_DONE)
 				return 0
 		elif status == self.CMD_REQ_DONE:
 			logger.info("CMD_REQ_DONE")
@@ -403,9 +404,9 @@ class RF_Controller:
 						room.status = STATUS_NEW
 						lcd.change_status(room)
 					if room.status == STATUS_NEW:
-						self.write_ack(id, room_id, cmd_id, self.CMD_REQ_DONE)
+						self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_REQ_DONE)
 					if room.status == STATUS_PROCESS:
-						self.write_ack(id, room_id, cmd_id, self.CMD_PROCESSING)
+						self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_PROCESSING)
 				return 0
 		elif status == self.CMD_PROCESSING:
 			logger.info("CMD_PROCESSING")
@@ -418,7 +419,7 @@ class RF_Controller:
 						logger.info("change status")
 						room.status = STATUS_PROCESS
 						lcd.change_status(room)
-					self.write_ack(id, room_id, cmd_id, self.CMD_PROCESSING)
+					self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_PROCESSING)
 				return 0
 		elif status == self.CMD_REQ_ID:
 			logger.info("CMD_REQ_ID")
@@ -427,7 +428,7 @@ class RF_Controller:
 				new_id = random.randint(0,255)
 				while(new_id == room.id):
 					new_id = random.randint(0,255)
-				rf_controller.write_id(id, room_id, cmd_id, rf_controller.CMD_REQ_ID_OK, new_id, req_new_room_id)
+				rf_controller.write_id(mac_id, id, room_id, cmd_id, rf_controller.CMD_REQ_ID_OK, new_id, req_new_room_id)
 				return 0
 		elif status == self.CMD_REQ_ID_OK:
 			logger.info("CMD_REQ_ID_OK")
@@ -442,15 +443,15 @@ class RF_Controller:
 						lcd.change_status(room)
 		elif status == self.FLASH_PRO_ERR:
 			logger.error("FLASH_PRO_ERR " + binascii.hexlify(data))
-			self.write_ack(id, room_id, cmd_id, status)
+			self.write_ack(mac_id, id, room_id, cmd_id, status)
 			send_mail("FLASH_PRO_ERR " + binascii.hexlify(data))
 		elif status == self.AM2302_RD_ERR:
 			logger.error("AM2302_RD_ERR " + binascii.hexlify(data))
-			self.write_ack(id, room_id, cmd_id, status)
+			self.write_ack(mac_id, id, room_id, cmd_id, status)
 			send_mail("AM2302_RD_ERR " + binascii.hexlify(data))
 		elif status == self.CLIENT_CHANGE_ID:
 			logger.error("CLIENT_CHANGE_ID " + binascii.hexlify(data))
-			self.write_ack(id, room_id, cmd_id, status)
+			self.write_ack(mac_id, id, room_id, cmd_id, status)
 			send_mail("CLIENT_CHANGE_ID " + binascii.hexlify(data))
 
 ###############################################################################
