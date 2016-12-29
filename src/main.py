@@ -351,7 +351,7 @@ class RF_Controller:
 		data = bytearray([0x55, mac_id, id, room_id, cmd_id, status, 0x00, 0x00, 0x00, 0xFF, 0xFF])
 		self.write(data)
 
-	def write_id(self, id, mac_id, room_id, cmd_id, status, new_id, new_room_id):
+	def write_id(self, mac_id, id, room_id, cmd_id, status, new_id, new_room_id):
 		logger.info("write ack")
 		data = bytearray([0x55, mac_id, id, room_id, cmd_id, status, new_id, new_room_id, 0x00, 0xFF, 0xFF])
 		self.write(data)
@@ -438,9 +438,10 @@ class RF_Controller:
 					room.id = id
 					save_id()
 					lcd.switch(LCD_STATE_NORMAL)
-					for room in room_map:
-						lcd.init_info(room)
-						lcd.change_status(room)
+					for room1 in room_map:
+						lcd.init_info(room1)
+						lcd.change_status(room1)
+					lcd.update_info(room, temp, humit, batt)
 		elif status == self.FLASH_PRO_ERR:
 			logger.error("FLASH_PRO_ERR " + binascii.hexlify(data))
 			self.write_ack(mac_id, id, room_id, cmd_id, status)
