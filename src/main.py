@@ -343,7 +343,7 @@ class RF_Controller:
 		room.status = STATUS_PROCESS
 		lcd.change_status(room)
 
-	def write_process(self, room):
+	def write_done(self, room):
 		room.status = STATUS_DONE
 		lcd.change_status(room)
 
