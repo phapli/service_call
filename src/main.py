@@ -423,7 +423,7 @@ class RF_Controller:
 					# logger.info(room.status)
 					lcd.update_info(room, temp, humit, batt)
 					if room.status == STATUS_DONE:
-						self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_DONE)
+						self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_IDLE)
 					else:
 						if room.status != STATUS_PROCESS_CONFIRM:
 							logger.info("change status")
