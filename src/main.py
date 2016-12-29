@@ -70,6 +70,7 @@ breakevent = threading.Event()
 STATUS_DONE = 0
 STATUS_NEW = 1
 STATUS_PROCESS = 2
+STATUS_PROCESS_CONFIRM = 3
 
 last_update = time.time()
 lcd_state = LCD_STATE_NORMAL
@@ -339,11 +340,11 @@ class RF_Controller:
 			self.ser.write(bytearray([data[index]]))
 
 	def write_process(self, room):
-		# room.pending_cmd = True
-		# room.last_send_time = time.time()
-		# data = bytearray([self.CMD_REQ_DONE, room.room_id, 0x00, 0x00, 0x00])
-		# self.write(data)
 		room.status = STATUS_PROCESS
+		lcd.change_status(room)
+
+	def write_process(self, room):
+		room.status = STATUS_DONE
 		lcd.change_status(room)
 
 	def write_ack(self, mac_id, id, room_id, cmd_id, status):
@@ -405,7 +406,7 @@ class RF_Controller:
 						lcd.change_status(room)
 					if room.status == STATUS_NEW:
 						self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_REQ_DONE)
-					if room.status == STATUS_PROCESS:
+					if room.status == STATUS_PROCESS or room.status == STATUS_PROCESS_CONFIRM:
 						self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_PROCESSING)
 				return 0
 		elif status == self.CMD_PROCESSING:
@@ -415,11 +416,14 @@ class RF_Controller:
 				if room:
 					# logger.info(room.status)
 					lcd.update_info(room, temp, humit, batt)
-					if room.status != STATUS_PROCESS:
-						logger.info("change status")
-						room.status = STATUS_PROCESS
-						lcd.change_status(room)
-					self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_PROCESSING)
+					if room.status == STATUS_DONE:
+						self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_DONE)
+					else:
+						if room.status != STATUS_PROCESS_CONFIRM:
+							logger.info("change status")
+							room.status = STATUS_PROCESS_CONFIRM
+							lcd.change_status(room)
+						self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_PROCESSING)
 				return 0
 		elif status == self.CMD_REQ_ID:
 			logger.info("CMD_REQ_ID")
@@ -538,6 +542,9 @@ class LCD_Controller:
 							if room.last_press_lcd > 0 and time.time() - room.last_press_lcd > 5:
 								lcd.switch(LCD_STATE_CONFIG)
 								req_new_room_id = room.room_id
+							elif room.last_press_lcd > 0 and time.time() - room.last_press_lcd >= 3:
+								if room and room.status == STATUS_PROCESS_CONFIRM:
+									rf_controller.write_done(room)
 							else:
 								if room and room.status == STATUS_NEW:
 									rf_controller.write_process(room)
@@ -631,7 +638,7 @@ class LCD_Controller:
 			self.write("vis n" + str((room.room_id - 1)*3) + ",0")
 			self.write("vis n" + str((room.room_id - 1)*3 + 1) + ",1")
 			self.write("vis n" + str((room.room_id - 1)*3 + 2) + ",0")
-		elif room.status == STATUS_PROCESS:
+		elif room.status == STATUS_PROCESS or room.status == STATUS_PROCESS_CONFIRM:
 			print("PROCESS")
 			self.write("vis t" + str(18 + (room.room_id - 1)*2) + ",0")
 			self.write("vis t" + str(18 + (room.room_id - 1)*2 + 1) + ",1")
