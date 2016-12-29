@@ -106,7 +106,7 @@ class LCD_Process(threading.Thread):
 			try:
 				lcd.read()
 			except Exception as e:
-				logger.error("ERROR to read lcd")
+				logger.exception("ERROR to read lcd")
 ###############################################################################		
 class RF_Process(threading.Thread):
 	stopper = None
@@ -142,7 +142,7 @@ class RF_Process(threading.Thread):
 							req_new_room_id = room.room_id
 							room.last_press_lcd = 0
 			except Exception as e:
-				logger.error("ERROR to read rf")
+				logger.exception("ERROR to read rf")
 			
 ###############################################################################		
 class AlarmSystem(threading.Thread):
