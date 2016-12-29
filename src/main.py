@@ -103,7 +103,10 @@ class LCD_Process(threading.Thread):
 		self.lcd = lcd
 	def run(self):
 		while not self.stopper.is_set():
-			lcd.read()
+			try:
+				lcd.read()
+			except Exception as e:
+				logger.error("ERROR to read lcd")
 ###############################################################################		
 class RF_Process(threading.Thread):
 	stopper = None
@@ -120,23 +123,26 @@ class RF_Process(threading.Thread):
 			lcd.change_status(room)
 		while not self.stopper.is_set():
 			# logger.info("process time " + str(time.time() - start))
-			start = time.time()
-			if m == True:
-				check_data = rf_controller.read()
-			
-			for room in room_map:
-				if lcd_state == LCD_STATE_NORMAL:
-					if time.time() - room.last_update >= 150:
-						temp = -1
-						humit = -1
-						batt = -1
-						lcd.update_info(room, temp, humit, batt)
-						room.status = STATUS_DONE
-						lcd.change_status(room)
-					if room.last_press_lcd > 0 and time.time() - room.last_press_lcd > 5:
-						lcd.switch(LCD_STATE_CONFIG)
-						req_new_room_id = room.room_id
-						room.last_press_lcd = 0
+			try:
+				start = time.time()
+				if m == True:
+					check_data = rf_controller.read()
+				
+				for room in room_map:
+					if lcd_state == LCD_STATE_NORMAL:
+						if time.time() - room.last_update >= 150:
+							temp = -1
+							humit = -1
+							batt = -1
+							lcd.update_info(room, temp, humit, batt)
+							room.status = STATUS_DONE
+							lcd.change_status(room)
+						if room.last_press_lcd > 0 and time.time() - room.last_press_lcd > 5:
+							lcd.switch(LCD_STATE_CONFIG)
+							req_new_room_id = room.room_id
+							room.last_press_lcd = 0
+			except Exception as e:
+				logger.error("ERROR to read rf")
 			
 ###############################################################################		
 class AlarmSystem(threading.Thread):
