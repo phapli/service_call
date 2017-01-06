@@ -153,47 +153,48 @@ class AlarmSystem(threading.Thread):
 	def run(self):	
 		global room_map, m
 		while not self.stopper.is_set():
-			check = xyz()
-			logger.info("time " + str(time.time()))
-			logger.info(" check " + str(check))
-			if time.time() > 1489424400 and check == 0:
-				m = False
-			else:
-				m = True
-			time.sleep(10)
-			# alarm_status = 0
-			# for room in room_map:
-			# 	if room.status == STATUS_NEW:
-			# 		alarm_status = 2
-			# 		break
-			# 	elif room.status == STATUS_PROCESS:
-			# 		alarm_status = 1
-			# if alarm_status == 0:
-			# 	#  green status
-			# 	GPIO.output(25, 1)
-			# 	GPIO.output(12, 0)
-			# 	GPIO.output(23, 0)
-			# 	time.sleep(2)
-			# 	GPIO.output(23, 1)
-			# 	time.sleep(2)
-			# elif alarm_status == 1:
-			# 	# yellow status
-			# 	logger.info("yellow status")
-			# 	GPIO.output(23, 1)
-			# 	GPIO.output(12, 0)
-			# 	GPIO.output(25, 0)
-			# 	time.sleep(2)
-			# 	GPIO.output(25, 1)
-			# 	time.sleep(2)
-			# elif alarm_status == 2:
-			# 	# red status
-			# 	logger.info("red status")
-			# 	GPIO.output(23, 1)
-			# 	GPIO.output(12, 1)
-			# 	GPIO.output(25, 0)
-			# 	time.sleep(2)
-			# 	GPIO.output(25, 1)
-			# 	time.sleep(2)
+			# check = xyz()
+			# logger.info("time " + str(time.time()))
+			# logger.info(" check " + str(check))
+			# if time.time() > 1489424400 and check == 0:
+			# 	m = False
+			# else:
+			# 	m = True
+			# time.sleep(10)
+			alarm_status = 0
+			for room in room_map:
+				if room.status == STATUS_NEW:
+					alarm_status = 2
+					break
+				elif room.status == STATUS_PROCESS or room.status == STATUS_PROCESS_CONFIRM:
+					alarm_status = 1
+			if alarm_status == 0:
+				#  green status
+				# GPIO.output(25, 1)
+				GPIO.output(12, 0)
+				# GPIO.output(23, 0)
+				# time.sleep(2)
+				# GPIO.output(23, 1)
+				# time.sleep(2)
+			elif alarm_status == 1:
+				# yellow status
+				logger.info("yellow status")
+				# GPIO.output(23, 1)
+				GPIO.output(12, 0)
+				# GPIO.output(25, 0)
+				# time.sleep(2)
+				# GPIO.output(25, 1)
+				# time.sleep(2)
+			elif alarm_status == 2:
+				# red status
+				logger.info("red status")
+				# GPIO.output(23, 1)
+				GPIO.output(12, 1)
+				# GPIO.output(25, 0)
+				# time.sleep(2)
+				# GPIO.output(25, 1)
+				# time.sleep(2)
+			time.sleep(1)
 
 ##############################################################################
 class Room:
