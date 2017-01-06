@@ -52,7 +52,7 @@ initialize_logger("/var/log/service_call")
 ###############################################################################
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-GPIO.setup(12, GPIO.OUT) #Buzzer
+GPIO.setup(21, GPIO.OUT) #Buzzer
 GPIO.setup(23, GPIO.OUT) #GREEN led
 GPIO.setup(25, GPIO.OUT) #RED led
 
@@ -171,7 +171,7 @@ class AlarmSystem(threading.Thread):
 			if alarm_status == 0:
 				#  green status
 				# GPIO.output(25, 1)
-				GPIO.output(12, 0)
+				GPIO.output(21, 0)
 				# GPIO.output(23, 0)
 				# time.sleep(2)
 				# GPIO.output(23, 1)
@@ -180,7 +180,7 @@ class AlarmSystem(threading.Thread):
 				# yellow status
 				logger.info("yellow status")
 				# GPIO.output(23, 1)
-				GPIO.output(12, 0)
+				GPIO.output(21, 0)
 				# GPIO.output(25, 0)
 				# time.sleep(2)
 				# GPIO.output(25, 1)
@@ -189,7 +189,7 @@ class AlarmSystem(threading.Thread):
 				# red status
 				logger.info("red status")
 				# GPIO.output(23, 1)
-				GPIO.output(12, 1)
+				GPIO.output(21, 1)
 				# GPIO.output(25, 0)
 				# time.sleep(2)
 				# GPIO.output(25, 1)
