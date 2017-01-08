@@ -137,10 +137,13 @@ class RF_Process(threading.Thread):
 							lcd.update_info(room, temp, humit, batt)
 							room.status = STATUS_DONE
 							lcd.change_status(room)
-						if room.last_press_lcd > 0 and time.time() - room.last_press_lcd > 5:
+						if room.last_press_lcd > 0 and time.time() - room.last_press_lcd > 10:
 							lcd.switch(LCD_STATE_CONFIG)
 							req_new_room_id = room.room_id
 							room.last_press_lcd = 0
+						elif room.last_press_lcd > 0 and time.time() - room.last_press_lcd >= 3:
+							if room and room.status == STATUS_PROCESS_CONFIRM:
+								rf_controller.write_done(room)
 			except Exception as e:
 				logger.exception("ERROR to read rf")
 			
@@ -548,7 +551,7 @@ class LCD_Controller:
 							room.last_press_lcd = time.time()
 						else:
 							logger.info("press time: " + str(time.time() - room.last_press_lcd))
-							if room.last_press_lcd > 0 and time.time() - room.last_press_lcd > 5:
+							if room.last_press_lcd > 0 and time.time() - room.last_press_lcd > 10:
 								lcd.switch(LCD_STATE_CONFIG)
 								req_new_room_id = room.room_id
 							elif room.last_press_lcd > 0 and time.time() - room.last_press_lcd >= 3:
