@@ -299,7 +299,7 @@ class RF_Controller:
 			if self.ser1.isOpen():
 				logger.info("Open RF controller on port: " + self.ser1.portstr)
 				self.is_port1 = True
-				cur_port = 1
+				self.cur_port = 1
 		except Exception as e:
 			logger.error("Error when open RF controller on port: " + port1)
 
@@ -311,17 +311,17 @@ class RF_Controller:
 			if self.ser2.isOpen():
 				logger.info("Open RF controller on port: " + self.ser2.portstr)
 				self.is_port2 = True
-				cur_port = 2
+				self.cur_port = 2
 		except Exception as e:
 			logger.error("Error when open RF controller on port: " + port2)
 
 	def switch(self):
-		if cur_port == 1:
+		if self.cur_port == 1:
 			if is_port2 == True:
-				cur_port = 2
+				self.cur_port = 2
 		else:
 			if is_port1 == True:
-				cur_port = 1
+				self.cur_port = 1
 
 	def cal_checksum(self, data):
 		sum = 0
@@ -344,7 +344,7 @@ class RF_Controller:
 	def read(self):
 		#logger.info("try read data")
 		global last_update
-		if cur_port == 1:
+		if self.cur_port == 1:
 			temp_buff_read = self.ser1.read(11)
 			self.ser1.flushInput()
 		else:
@@ -389,7 +389,7 @@ class RF_Controller:
 		logger.info("send " + binascii.hexlify(data))
 		for index in range(len(data)):
 			#time.sleep(0.004)
-			if cur_port == 1:
+			if self.cur_port == 1:
 				self.ser1.write(bytearray([data[index]]))
 			else:
 				self.ser2.write(bytearray([data[index]]))
