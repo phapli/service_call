@@ -56,8 +56,11 @@ GPIO.setup(21, GPIO.OUT) #Buzzer
 GPIO.setup(23, GPIO.OUT) #GREEN led
 GPIO.setup(25, GPIO.OUT) #RED led
 
-RF_PORT = "/dev/ttyUSB0"
+RF_PORT1 = "/dev/ttyUSB0"
+RF_PORT2 = "/dev/ttyUSB1"
 RF_BAUDRATE = 9600
+
+cur_port = RF_PORT1
 
 LCD_PORT = "/dev/ttyAMA0"
 LCD_BAUDRATE = 9600
@@ -118,6 +121,8 @@ class RF_Process(threading.Thread):
 	def run(self):
 		global lcd_state, req_new_room_id, m
 		start = time.time()
+		nodata_count = 0
+		read_count = 0
 		for room in room_map:
 			lcd.init_info(room)
 			lcd.change_status(room)
@@ -125,9 +130,19 @@ class RF_Process(threading.Thread):
 			# logger.info("process time " + str(time.time() - start))
 			try:
 				start = time.time()
+				read_count +=1
+				logger.info("read_count: " + str(read_count))
 				if m == True:
 					check_data = rf_controller.read()
-				
+					if check_data == -1:
+						nodata_count +=1
+						if nodata_count > 1000:
+							logger.info("nodata_count > 1000")
+							if cur_port == RF_PORT1:
+								cur_port = RF_PORT2
+							else:
+								cur_port = RF_PORT1
+							rf_controller.open(cur_port)
 				for room in room_map:
 					if lcd_state == LCD_STATE_NORMAL:
 						if time.time() - room.last_update >= 150:
@@ -278,9 +293,12 @@ class RF_Controller:
 	CLIENT_CHANGE_ID = 0x84
 
 	def __init__(self, port, baudrate, timeout):
-		self.ser.port = port
 		self.ser.baudrate = baudrate
 		self.ser.timeout = timeout
+		open(port)
+
+	def open(self, port):
+		self.ser.port = port
 		self.ser.open()
 		if self.ser.isOpen():
 			logger.info("Open RF controller on port: " + self.ser.portstr)
@@ -341,7 +359,7 @@ class RF_Controller:
 				if data_process[index] == 85:
 					self.state = 0
 					self.buff_read[self.state] = data_process[index]
-		return -1
+		return 0
 
 	def write(self, data):
 		sum = self.cal_checksum(data)
@@ -673,7 +691,7 @@ def init_system():
 	lcd = LCD_Controller(LCD_PORT, LCD_BAUDRATE, 0.2)
 	lcd.refesh()
 	time.sleep(2)
-	rf_controller = RF_Controller(RF_PORT, RF_BAUDRATE, 0.2)
+	rf_controller = RF_Controller(cur_port, RF_BAUDRATE, 0.2)
 
 	alarm_system = AlarmSystem(breakevent)
 	handler_alarm = SignalHandler(breakevent,alarm_system)
