@@ -271,7 +271,8 @@ def xyz():
 	return int(b)
 ###############################################################################
 class RF_Controller:
-	ser = serial.Serial()
+	ser1 = serial.Serial()
+	ser2 = serial.Serial()
 	state = -1
 	buff_read = bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
 
