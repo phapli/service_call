@@ -119,7 +119,7 @@ class RF_Process(threading.Thread):
 	def run(self):
 		global lcd_state, req_new_room_id, m
 		start = time.time()
-		nodata_count = 0
+		nodata_count = time.time()
 		# read_count = 0
 		for room in room_map:
 			lcd.init_info(room)
@@ -133,12 +133,12 @@ class RF_Process(threading.Thread):
 				if m == True:
 					check_data = rf_controller.read()
 					if check_data == -1:
-						nodata_count +=1
-						if nodata_count > 2000:
-							logger.info("nodata_count > 2000")
+						if time.time() - nodata_count > 2 * 60:
+							logger.info("nodata_count > 2m")
+							nodata_count = time.time()
 							rf_controller.switch()
 					else:
-						nodata_count = 0
+						nodata_count = time.time()
 				for room in room_map:
 					if lcd_state == LCD_STATE_NORMAL:
 						if time.time() - room.last_update >= 150:
