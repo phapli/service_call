@@ -57,10 +57,8 @@ GPIO.setup(23, GPIO.OUT) #GREEN led
 GPIO.setup(25, GPIO.OUT) #RED led
 
 RF_PORT1 = "/dev/ttyUSB0"
-RF_PORT2 = "/dev/ttyUSB0"
+RF_PORT2 = "/dev/ttyUSB1"
 RF_BAUDRATE = 9600
-
-cur_port = RF_PORT1
 
 LCD_PORT = "/dev/ttyAMA0"
 LCD_BAUDRATE = 9600
@@ -119,7 +117,7 @@ class RF_Process(threading.Thread):
 		self.stopper = stopper
 		self.rf = rf
 	def run(self):
-		global lcd_state, req_new_room_id, cur_port, m
+		global lcd_state, req_new_room_id, m
 		start = time.time()
 		nodata_count = 0
 		read_count = 0
@@ -138,11 +136,7 @@ class RF_Process(threading.Thread):
 						nodata_count +=1
 						if nodata_count > 100:
 							logger.info("nodata_count > 1000")
-							if cur_port == RF_PORT1:
-								cur_port = RF_PORT2
-							else:
-								cur_port = RF_PORT1
-							rf_controller.open(cur_port)
+							rf_controller.switch()
 				for room in room_map:
 					if lcd_state == LCD_STATE_NORMAL:
 						if time.time() - room.last_update >= 150:
@@ -292,18 +286,42 @@ class RF_Controller:
 	AM2302_RD_ERR = 0x82
 	CLIENT_CHANGE_ID = 0x84
 
-	def __init__(self, port, baudrate, timeout):
-		self.ser.baudrate = baudrate
-		self.ser.timeout = timeout
-		self.open(port)
+	is_port1 = False
+	is_port2 = False
+	cur_port = 1
 
-	def open(self, port):
-		self.ser.port = port
-		self.ser.open()
-		if self.ser.isOpen():
-			logger.info("Open RF controller on port: " + self.ser.portstr)
+	def __init__(self, port1, port2, baudrate, timeout):
+		try:
+			self.ser1.baudrate = baudrate
+			self.ser1.timeout = timeout
+			self.ser1.port = port1
+			self.ser1.open()
+			if self.ser1.isOpen():
+				logger.info("Open RF controller on port: " + self.ser1.portstr)
+				self.is_port1 = True
+				cur_port = 1
+		except Exception as e:
+			logger.error("Error when open RF controller on port: " + port1)
+
+		try:
+			self.ser2.baudrate = baudrate
+			self.ser2.timeout = timeout
+			self.ser2.port = port2
+			self.ser2.open()
+			if self.ser2.isOpen():
+				logger.info("Open RF controller on port: " + self.ser2.portstr)
+				self.is_port2 = True
+				cur_port = 2
+		except Exception as e:
+			logger.error("Error when open RF controller on port: " + port2)
+
+	def switch(self):
+		if cur_port == 1:
+			if is_port2 == True:
+				cur_port = 2
 		else:
-			logger.error("Error when open RF controller on port: " + self.ser.portstr)
+			if is_port1 == True:
+				cur_port = 1
 
 	def cal_checksum(self, data):
 		sum = 0
@@ -326,8 +344,12 @@ class RF_Controller:
 	def read(self):
 		#logger.info("try read data")
 		global last_update
-		temp_buff_read = self.ser.read(11)
-		self.ser.flushInput()
+		if cur_port == 1:
+			temp_buff_read = self.ser1.read(11)
+			self.ser1.flushInput()
+		else:
+			temp_buff_read = self.ser2.read(11)
+			self.ser2.flushInput()
 		if len(temp_buff_read) > 0:
 			logger.info("===============================\t" + binascii.hexlify(temp_buff_read))
 			data_process = bytearray(len(temp_buff_read))
@@ -367,7 +389,11 @@ class RF_Controller:
 		logger.info("send " + binascii.hexlify(data))
 		for index in range(len(data)):
 			#time.sleep(0.004)
-			self.ser.write(bytearray([data[index]]))
+			if cur_port == 1:
+				self.ser1.write(bytearray([data[index]]))
+			else:
+				self.ser2.write(bytearray([data[index]]))
+				
 
 	def write_process(self, room):
 		room.status = STATUS_PROCESS
@@ -691,7 +717,7 @@ def init_system():
 	lcd = LCD_Controller(LCD_PORT, LCD_BAUDRATE, 0.2)
 	lcd.refesh()
 	time.sleep(2)
-	rf_controller = RF_Controller(cur_port, RF_BAUDRATE, 0.2)
+	rf_controller = RF_Controller(RF_PORT1, RF_PORT2, RF_BAUDRATE, 0.2)
 
 	alarm_system = AlarmSystem(breakevent)
 	handler_alarm = SignalHandler(breakevent,alarm_system)
