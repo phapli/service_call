@@ -133,7 +133,7 @@ class RF_Process(threading.Thread):
 				if m == True:
 					check_data = rf_controller.read()
 					if check_data == -1:
-						if time.time() - nodata_count > 1 * 60:
+						if time.time() - nodata_count > 2 * 60:
 							logger.info("nodata_count > 2m")
 							nodata_count = time.time()
 							rf_controller.switch()
