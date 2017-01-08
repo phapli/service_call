@@ -137,6 +137,8 @@ class RF_Process(threading.Thread):
 						if nodata_count > 100:
 							logger.info("nodata_count > 1000")
 							rf_controller.switch()
+					else:
+						nodata_count = 0
 				for room in room_map:
 					if lcd_state == LCD_STATE_NORMAL:
 						if time.time() - room.last_update >= 150:
