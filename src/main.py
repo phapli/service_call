@@ -190,6 +190,8 @@ class AlarmSystem(threading.Thread):
 				logger.info("red status")
 				# GPIO.output(23, 1)
 				GPIO.output(21, 1)
+				time.sleep(1)
+				GPIO.output(21, 1)
 				# GPIO.output(25, 0)
 				# time.sleep(2)
 				# GPIO.output(25, 1)
