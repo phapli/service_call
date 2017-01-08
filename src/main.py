@@ -134,8 +134,8 @@ class RF_Process(threading.Thread):
 					check_data = rf_controller.read()
 					if check_data == -1:
 						nodata_count +=1
-						if nodata_count > 100:
-							logger.info("nodata_count > 1000")
+						if nodata_count > 2000:
+							logger.info("nodata_count > 2000")
 							rf_controller.switch()
 					else:
 						nodata_count = 0
@@ -384,7 +384,7 @@ class RF_Controller:
 				if data_process[index] == 85:
 					self.state = 0
 					self.buff_read[self.state] = data_process[index]
-		return 0
+		return -1
 
 	def write(self, data):
 		sum = self.cal_checksum(data)
