@@ -57,7 +57,7 @@ GPIO.setup(23, GPIO.OUT) #GREEN led
 GPIO.setup(25, GPIO.OUT) #RED led
 
 RF_PORT1 = "/dev/ttyUSB0"
-RF_PORT2 = "/dev/ttyUSB1"
+RF_PORT2 = "/dev/ttyUSB0"
 RF_BAUDRATE = 9600
 
 cur_port = RF_PORT1
