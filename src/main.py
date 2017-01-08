@@ -318,10 +318,10 @@ class RF_Controller:
 
 	def switch(self):
 		if self.cur_port == 1:
-			if is_port2 == True:
+			if self.is_port2 == True:
 				self.cur_port = 2
 		else:
-			if is_port1 == True:
+			if self.is_port1 == True:
 				self.cur_port = 1
 
 	def cal_checksum(self, data):
