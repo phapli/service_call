@@ -119,7 +119,7 @@ class RF_Process(threading.Thread):
 		self.stopper = stopper
 		self.rf = rf
 	def run(self):
-		global lcd_state, req_new_room_id, m
+		global lcd_state, req_new_room_id, cur_port, m
 		start = time.time()
 		nodata_count = 0
 		read_count = 0
@@ -136,7 +136,7 @@ class RF_Process(threading.Thread):
 					check_data = rf_controller.read()
 					if check_data == -1:
 						nodata_count +=1
-						if nodata_count > 1000:
+						if nodata_count > 100:
 							logger.info("nodata_count > 1000")
 							if cur_port == RF_PORT1:
 								cur_port = RF_PORT2
