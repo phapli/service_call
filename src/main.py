@@ -295,7 +295,7 @@ class RF_Controller:
 	def __init__(self, port, baudrate, timeout):
 		self.ser.baudrate = baudrate
 		self.ser.timeout = timeout
-		open(port)
+		self.open(port)
 
 	def open(self, port):
 		self.ser.port = port
