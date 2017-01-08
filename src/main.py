@@ -133,7 +133,7 @@ class RF_Process(threading.Thread):
 				if m == True:
 					check_data = rf_controller.read()
 					if check_data == -1:
-						if time.time() - nodata_count > 2 * 60:
+						if time.time() - nodata_count > 1 * 60:
 							logger.info("nodata_count > 2m")
 							nodata_count = time.time()
 							rf_controller.switch()
@@ -319,11 +319,14 @@ class RF_Controller:
 			logger.error("Error when open RF controller on port: " + port2)
 
 	def switch(self):
+		logger.info("cur port: " + str(self.cur_port))
 		if self.cur_port == 1:
 			if self.is_port2 == True:
+				logger.info("switch to port 2")
 				self.cur_port = 2
 		else:
 			if self.is_port1 == True:
+				logger.info("switch to port 1")
 				self.cur_port = 1
 
 	def cal_checksum(self, data):
