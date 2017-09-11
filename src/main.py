@@ -340,9 +340,9 @@ class RF_Controller:
 		return sum	
 
 	def checksum(self, data):
-		sum = self.cal_checksum(data)
+		# sum = self.cal_checksum(data)
 		# logger.info("checksum " + str(data[9]))
-		if sum == data[9]:
+		if 170 == data[9]:
 			return True
 		else:
 			return True
@@ -390,7 +390,8 @@ class RF_Controller:
 		return -1
 
 	def write(self, data):
-		sum = self.cal_checksum(data)
+		# sum = self.cal_checksum(data)
+		sum = 187
 		data[9] = sum
 		logger.info("send " + binascii.hexlify(data))
 		for index in range(len(data)):
