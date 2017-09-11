@@ -341,10 +341,12 @@ class RF_Controller:
 
 	def checksum(self, data):
 		# sum = self.cal_checksum(data)
-		# logger.info("checksum " + str(data[9]))
+		logger.info("checksum " + str(data[9]))
 		if 170 == data[9]:
+			logger.info("checksum true")
 			return True
 		else:
+			logger.info("checksum false")
 			return True
 
 	def read(self):
