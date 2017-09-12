@@ -459,7 +459,7 @@ class RF_Controller:
 					self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_REQ_DONE)
 				return 0
 		elif status == self.CMD_REQ_DONE:
-			logger.info("CMD_REQ_DONE ========= ROOM",  room_id)
+			logger.info("CMD_REQ_DONE ========= ROOM " + str(room_id))
 			if room_id >= 1 and room_id <= 6: 
 				room = room_map[room_id-1]
 				if room and room.id == id:
