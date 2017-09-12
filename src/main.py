@@ -589,7 +589,7 @@ class LCD_Controller:
 				room_id = 5
 			elif data[2] == 0x72 or data[2] == 0x10:
 				room_id = 6
-			logger.info("ROOM",  str(room_id))
+			logger.info("ROOM " + str(room_id))
 			if room_id != 0:
 				if room_id >= 1 and room_id <= 6:
 					room = room_map[room_id-1]
