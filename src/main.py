@@ -341,12 +341,12 @@ class RF_Controller:
 
 	def checksum(self, data):
 		# sum = self.cal_checksum(data)
-		logger.info("checksum " + str(data[9]))
+		# logger.info("checksum " + str(data[9]))
 		if 170 == data[9]:
-			logger.info("checksum true")
+			# logger.info("checksum true")
 			return True
 		else:
-			logger.info("checksum false")
+			# logger.info("checksum false")
 			return True
 
 	def read(self):
@@ -434,7 +434,7 @@ class RF_Controller:
 		humit = data[7]
 		batt = data[8]
 		if status == self.CMD_IDLE:
-			logger.info("CMD_IDLE")
+			logger.info("CMD_IDLE ========= ROOM " + room_id)
 			if room_id >= 1 and room_id <= 6: 
 				room = room_map[room_id-1]
 				if room and room.id == id:
@@ -446,7 +446,7 @@ class RF_Controller:
 					self.write_ack(mac_id, id, room_id, cmd_id, status)
 				return 0
 		elif status == self.CMD_REQ_SER:
-			logger.info("CMD_REQ_SER")
+			logger.info("CMD_REQ_SER ========= ROOM " + room_id)
 			if room_id >= 1 and room_id <= 6: 
 				room = room_map[room_id-1]
 				if room and room.id == id:
@@ -459,7 +459,7 @@ class RF_Controller:
 					self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_REQ_DONE)
 				return 0
 		elif status == self.CMD_REQ_DONE:
-			logger.info("CMD_REQ_DONE")
+			logger.info("CMD_REQ_DONE ========= ROOM " + room_id)
 			if room_id >= 1 and room_id <= 6: 
 				room = room_map[room_id-1]
 				if room and room.id == id:
@@ -475,7 +475,7 @@ class RF_Controller:
 						self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_PROCESSING)
 				return 0
 		elif status == self.CMD_PROCESSING:
-			logger.info("CMD_PROCESSING")
+			logger.info("CMD_PROCESSING ========= ROOM " + room_id)
 			if room_id >= 1 and room_id <= 6: 
 				room = room_map[room_id-1]
 				if room:
@@ -491,7 +491,7 @@ class RF_Controller:
 						self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_PROCESSING)
 				return 0
 		elif status == self.CMD_REQ_ID:
-			logger.info("CMD_REQ_ID")
+			logger.info("CMD_REQ_ID ========= ROOM " + room_id)
 			if lcd_state == LCD_STATE_CONFIG:
 				room = room_map[req_new_room_id-1]
 				new_id = random.randint(0,255)
@@ -500,7 +500,7 @@ class RF_Controller:
 				rf_controller.write_id(mac_id, id, room_id, cmd_id, rf_controller.CMD_REQ_ID_OK, new_id, req_new_room_id)
 				return 0
 		elif status == self.CMD_REQ_ID_OK:
-			logger.info("CMD_REQ_ID_OK")
+			logger.info("CMD_REQ_ID_OK ========= ROOM " + room_id)
 			if lcd_state == LCD_STATE_CONFIG:
 				if room_id >= 1 and room_id <= 6: 
 					room = room_map[room_id-1]
