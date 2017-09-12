@@ -512,7 +512,7 @@ class RF_Controller:
 						lcd.init_info(room1)
 						lcd.change_status(room1)
 					lcd.update_info(room, temp, humit, batt)
-					self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_REQ_ID_OK)
+					# self.write_ack(mac_id, id, room_id, cmd_id, self.CMD_REQ_ID_OK)
 		elif status == self.FLASH_PRO_ERR:
 			logger.error("FLASH_PRO_ERR " + binascii.hexlify(data))
 			self.write_ack(mac_id, id, room_id, cmd_id, status)
