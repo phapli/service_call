@@ -340,9 +340,9 @@ class RF_Controller:
 		return sum	
 
 	def checksum(self, data):
-		# sum = self.cal_checksum(data)
+		sum = self.cal_checksum(data)
 		# logger.info("checksum " + str(data[9]))
-		if 170 == data[9]:
+		if sum == data[9]:
 			# logger.info("checksum true")
 			return True
 		else:
@@ -374,7 +374,8 @@ class RF_Controller:
 				self.buff_read[self.state] = data_process[index]
 				if self.state == 10:
 					self.state = -1
-					if data_process[index] == 255:
+					# suffix == 0xAA
+					if data_process[index] == 170:
 						logger.info("data: " + binascii.hexlify(self.buff_read))
 						if self.checksum(self.buff_read):
 							return self.process_data(self.buff_read)
@@ -392,8 +393,8 @@ class RF_Controller:
 		return -1
 
 	def write(self, data):
-		# sum = self.cal_checksum(data)
-		sum = 187
+		sum = self.cal_checksum(data)
+		# sum = 187
 		data[9] = sum
 		logger.info("send " + binascii.hexlify(data))
 		for index in range(len(data)):
@@ -414,12 +415,12 @@ class RF_Controller:
 
 	def write_ack(self, mac_id, id, room_id, cmd_id, status):
 		logger.info("write ack")
-		data = bytearray([0x55, mac_id, id, room_id, cmd_id, status, 0x00, 0x00, 0x00, 0xFF, 0xFF])
+		data = bytearray([0x55, mac_id, id, room_id, cmd_id, status, 0x00, 0x00, 0x00, 0xFF, 0xBB])
 		self.write(data)
 
 	def write_id(self, mac_id, id, room_id, cmd_id, status, new_id, new_room_id):
 		logger.info("write ack")
-		data = bytearray([0x55, mac_id, id, room_id, cmd_id, status, new_id, new_room_id, 0x00, 0xFF, 0xFF])
+		data = bytearray([0x55, mac_id, id, room_id, cmd_id, status, new_id, new_room_id, 0x00, 0xFF, 0xBB])
 		self.write(data)
 
 	def process_data(self, data):
