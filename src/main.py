@@ -141,7 +141,7 @@ class RF_Process(threading.Thread):
 						nodata_count = time.time()
 				for room in room_map:
 					if lcd_state == LCD_STATE_NORMAL:
-						if time.time() - room.last_update >= 150:
+						if time.time() - room.last_update >= 1 * 60 * 60:
 							temp = -1
 							humit = -1
 							batt = -1
@@ -664,14 +664,17 @@ class LCD_Controller:
 				self.write("vis p" + str(index*9 + 6) + ",1")
 				self.write("vis p" + str(index*9 + 7) + ",0")
 				self.write("vis p" + str(index*9 + 8) + ",0")
+				self.write("vis t" + str(index*1 + 30) + ",1")
 			elif data > 5 and data <= 20:
 				self.write("vis p" + str(index*9 + 6) + ",0")
 				self.write("vis p" + str(index*9 + 7) + ",1")
 				self.write("vis p" + str(index*9 + 8) + ",0")
+				self.write("vis t" + str(index*1 + 30) + ",1")
 			else:
 				self.write("vis p" + str(index*9 + 6) + ",0")
 				self.write("vis p" + str(index*9 + 7) + ",0")
 				self.write("vis p" + str(index*9 + 8) + ",1")
+				self.write("vis t" + str(index*1 + 30) + ",0")
 
 	def update_info(self, room, temp, humit, batt):
 		room.last_update = time.time()
