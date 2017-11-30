@@ -578,17 +578,17 @@ class LCD_Controller:
 		room_id = 0
 		if data[0] == 0x65 and data[4] == 0xff and data[5] == 0xff and data[6] == 0xff:
 			logger.info("button " + str(data[2]))
-			if data[2] == 0x6d or data[2] == 0x0b:
+			if data[2] == 0x73 or data[2] == 0x04:
 				room_id = 1
-			elif data[2] == 0x6e or data[2] == 0x0c:
+			elif data[2] == 0x74 or data[2] == 0x05:
 				room_id = 2
-			elif data[2] == 0x6f or data[2] == 0x0d:
+			elif data[2] == 0x75 or data[2] == 0x06:
 				room_id = 3
-			elif data[2] == 0x70 or data[2] == 0x0e:
+			elif data[2] == 0x76 or data[2] == 0x07:
 				room_id = 4
-			elif data[2] == 0x71 or data[2] == 0x0f:
+			elif data[2] == 0x77 or data[2] == 0x08:
 				room_id = 5
-			elif data[2] == 0x72 or data[2] == 0x10:
+			elif data[2] == 0x78 or data[2] == 0x09:
 				room_id = 6
 			logger.info("ROOM " + str(room_id))
 			if room_id != 0:
