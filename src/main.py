@@ -433,7 +433,6 @@ class RF_Controller:
 		status = data[5]
 		temp = data[6]
 		humit = data[7]
-		# batt = data[8]
 		batt = 4
 		if status == self.CMD_IDLE:
 			logger.info("CMD_IDLE ========= ROOM " + str(room_id))
