@@ -433,7 +433,8 @@ class RF_Controller:
 		status = data[5]
 		temp = data[6]
 		humit = data[7]
-		batt = data[8]
+		# batt = data[8]
+		batt = 4
 		if status == self.CMD_IDLE:
 			logger.info("CMD_IDLE ========= ROOM " + str(room_id))
 			if room_id >= 1 and room_id <= 6: 
@@ -664,17 +665,17 @@ class LCD_Controller:
 				self.write("vis p" + str(index*9 + 6) + ",1")
 				self.write("vis p" + str(index*9 + 7) + ",0")
 				self.write("vis p" + str(index*9 + 8) + ",0")
-				self.write("vis t" + str(index*1 + 30) + ",1")
+				self.write("vis t" + str(index*1 + 36) + ",1")
 			elif data > 5 and data <= 20:
 				self.write("vis p" + str(index*9 + 6) + ",0")
 				self.write("vis p" + str(index*9 + 7) + ",1")
 				self.write("vis p" + str(index*9 + 8) + ",0")
-				self.write("vis t" + str(index*1 + 30) + ",1")
+				self.write("vis t" + str(index*1 + 36) + ",0")
 			else:
 				self.write("vis p" + str(index*9 + 6) + ",0")
 				self.write("vis p" + str(index*9 + 7) + ",0")
 				self.write("vis p" + str(index*9 + 8) + ",1")
-				self.write("vis t" + str(index*1 + 30) + ",0")
+				self.write("vis t" + str(index*1 + 36) + ",0")
 
 	def update_info(self, room, temp, humit, batt):
 		room.last_update = time.time()
