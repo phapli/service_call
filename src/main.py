@@ -625,11 +625,11 @@ class LCD_Controller:
 			senddata =  "t" + str(index*3 + field) + ".txt=\"" + str(data) + "\""
 			self.write(senddata)
 			self.write("vis t" + str(index + 30) + ",0")
+			self.update_icon(field, index, data)
 		else:
 			senddata =  "t" + str(index*3 + field) + ".txt=\"-\""
 			self.write(senddata)
 			self.write("vis t" + str(index + 30) + ",1")
-		self.update_icon(field, index, data)
 		
 
 	def update_icon(self, field, index, data):
