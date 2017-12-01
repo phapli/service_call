@@ -621,7 +621,6 @@ class LCD_Controller:
 		logger.info("update info room: " + str(index + 1) + " field: " + str(field) + " data: " + str(data))
 		if data > 100:
 			data = 100
-		self.update_icon(field, index, data)
 		if data > 0:
 			senddata =  "t" + str(index*3 + field) + ".txt=\"" + str(data) + "\""
 			self.write(senddata)
@@ -630,6 +629,7 @@ class LCD_Controller:
 			senddata =  "t" + str(index*3 + field) + ".txt=\"-\""
 			self.write(senddata)
 			self.write("vis t" + str(index + 30) + ",1")
+		self.update_icon(field, index, data)
 		
 
 	def update_icon(self, field, index, data):
